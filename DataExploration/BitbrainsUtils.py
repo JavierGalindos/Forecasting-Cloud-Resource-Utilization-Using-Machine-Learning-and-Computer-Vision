@@ -12,7 +12,7 @@ DATA_PATH = r'../Datasets/fastStorage/2013-8'
 FIGURES_PATH = '../Figures/DataExploration/'
 
 
-def load_VM(VM_name: str) -> object:
+def load_VM(VM_name: str) -> pd.DataFrame:
     """ Creates a dataframe for each VM
 
     :param VM_name: name of the VM. (e.g., '1.csv')
