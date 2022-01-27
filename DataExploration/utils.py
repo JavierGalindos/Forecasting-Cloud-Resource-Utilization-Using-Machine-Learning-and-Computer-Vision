@@ -147,7 +147,7 @@ def plot_data_cdf(data, inverse=False, datalabel=None, xlabel=None, title=None, 
     if xticks is not None: plt.xticks(xticks)
     plt.grid(alpha=.3, linestyle='--')
     if savefig is not None:
-        plt.savefig('/tmp/figures/{}.pdf'.format(savefig), bbox_inches='tight')
+        plt.savefig('../Figures/DataExploration/{}.pdf'.format(savefig), bbox_inches='tight')
     else:
         plt.show()
 
@@ -177,7 +177,7 @@ def plot_data_cdfs(data, datalabel=None, inverse=False, xlabel=None, title=None,
     if yticks is not None: plt.yticks(yticks)
     plt.grid(alpha=.3, linestyle='--')
     if savefig is not None:
-        plt.savefig('/tmp/figures/{}.pdf'.format(savefig), bbox_inches='tight')
+        plt.savefig('../Figures/DataExploration/{}.pdf'.format(savefig), bbox_inches='tight')
     else:
         plt.show()
 
