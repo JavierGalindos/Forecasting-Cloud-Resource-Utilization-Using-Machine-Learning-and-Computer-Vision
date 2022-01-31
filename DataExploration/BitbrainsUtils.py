@@ -160,7 +160,7 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, legend=
             Left: Overlapped VMs
             Right: Average features per cluster of VMs
     """
-
+    # TODO: check implentation of shared axis
     if n_clusters is None: n_clusters = len(np.unique(labels))
     for cluster_num in range(n_clusters):
         # List of VMs of this cluster
@@ -168,28 +168,13 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, legend=
         fig = plt.figure(figsize=figsize, dpi=dpi)
         title_fig = title + ' Cluster {} ({} VMs)'.format(cluster_num, len(VMs_cluster))
         if title is not None: fig.suptitle(title_fig, fontsize=14)
-        # Left figure
-        if clusters is not None:
-            ax1 = plt.subplot(1, 2, 1)
-        for VM in VMs_cluster:
-            plt.plot(VM, "k-", alpha=.2)
-        if legend: plt.legend()
-        if xlim is not None: plt.xlim(xlim)
-        if ylim is not None: plt.ylim(ylim)
-        if xlabel is not None: plt.xlabel(xlabel)
-        if ylabel is not None: plt.ylabel(ylabel)
-        if xticks is not None: plt.xticks(xticks)
-        plt.title('VMs in the cluster')
         # Right figure
         if clusters is not None:
-            if shared_axis:
-                plt.subplot(1, 2, 2, sharey=ax1, visible=True)
-            else:
-                plt.subplot(1, 2, 2)
+            ax1 = plt.subplot(1, 2, 2)
             cluster = clusters[cluster_num]
             plot_timeSeries(cluster.iloc[:, 0],
                             title='Average over the cluster',
-                            legend=legend,
+                            legend=True,
                             xlabel=xlabel,
                             ylabel=ylabel,
                             xlim=xlim,
@@ -199,6 +184,22 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, legend=
                             dpi=dpi,
                             savefig=None,
                             show=False)
+        # Left figure
+        if clusters is not None:
+            if shared_axis:
+                plt.subplot(1, 2, 1, sharey=ax1, visible=True)
+            else:
+                plt.subplot(1, 2, 1)
+        for VM in VMs_cluster:
+            plt.plot(VM, "k-", alpha=.2)
+        if legend: plt.legend()
+        if xlim is not None: plt.xlim(xlim)
+        if ylim is not None: plt.ylim(ylim)
+        if xlabel is not None: plt.xlabel(xlabel)
+        if ylabel is not None: plt.ylabel(ylabel)
+        if xticks is not None: plt.xticks(xticks)
+        plt.title('VMs in the cluster')
+
         if savefig is not None:
             save_path = os.path.join(FIGURES_PATH, savefig, 'Cluster{}'.format(cluster_num))
             plt.savefig(save_path, bbox_inches='tight')
@@ -207,7 +208,7 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, legend=
             plt.show()
 
 
-def optimal_clusters(features: List[str], models_path: str, length:int = 500):
+def optimal_clusters(features: List[str], models_path: str, length: int = 500, fast_validation: bool = True):
     # Load all VMs (list of VMs)
     VMs = load_all_VMs()
     print('Load VM: Completed')
@@ -236,11 +237,18 @@ def optimal_clusters(features: List[str], models_path: str, length:int = 500):
         # Predict labels
         labels = kmeans_model.predict(VMs_fs_short_ts)
         # Silhouette coefficient
-        sil_scores.append(silhouette_score(VMs_fs_ts,
-                                           labels,
-                                           metric="dtw",
-                                           n_jobs=-1,
-                                           verbose=True))
+        if fast_validation is True:
+            sil_scores.append(silhouette_score(VMs_fs_short_ts,
+                                               labels,
+                                               metric="dtw",
+                                               n_jobs=-1,
+                                               verbose=True))
+        else:
+            sil_scores.append(silhouette_score(VMs_fs_ts,
+                                               labels,
+                                               metric="dtw",
+                                               n_jobs=-1,
+                                               verbose=True))
     return sil_scores
 
 
