@@ -152,8 +152,9 @@ def plot_timeSeries(data, MA=10, ema=0.05, legend=True, xlabel=None, ylabel=None
             plt.show()
 
 
-def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, legend=False, xlabel='Timestmaps [ms]',
-                  ylabel=None, title=None, xlim=None, ylim=None, xticks=None, figsize=(13, 4), dpi=120, savefig=None):
+def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, marker='k-', legend=False,
+                  xlabel='Timestmaps [ms]', ylabel=None, title=None, xlim=None, ylim=None, xticks=None,
+                  figsize=(13, 4), dpi=120, savefig=None, **kwargs):
     """ Utility to plot VMs of each cluster
 
         Generate two subfigures:
@@ -190,7 +191,7 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, legend=
             else:
                 plt.subplot(1, 2, 1)
         for VM in VMs_cluster:
-            plt.plot(VM, "k-", alpha=.2)
+            plt.plot(VM, marker, alpha=.2, **kwargs)
         if legend: plt.legend()
         if xlim is not None: plt.xlim(xlim)
         if ylim is not None: plt.ylim(ylim)
