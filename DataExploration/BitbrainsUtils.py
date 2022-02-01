@@ -232,7 +232,13 @@ def optimal_clusters(features: List[str], models_path: str, length: int = 500, f
             print('Cannot write to {}, please fix it.'.format(models_path))
             exit()
         save_path = os.path.join(models_path, 'kmeans_{}.hdf5'.format(n_clusters))
-        kmeans_model.to_hdf5(save_path)
+        try:
+            kmeans_model.to_hdf5(save_path)
+        except FileExistsError:
+            print('Model already saved - Overwrite')
+            # Remove previous file and save it again
+            os.remove(save_path)
+            kmeans_model.to_hdf5(save_path)
         # Predict labels
         labels = kmeans_model.predict(VMs_fs_short_ts)
         # Silhouette coefficient
