@@ -160,7 +160,6 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, legend=
             Left: Overlapped VMs
             Right: Average features per cluster of VMs
     """
-    # TODO: check implentation of shared axis
     if n_clusters is None: n_clusters = len(np.unique(labels))
     for cluster_num in range(n_clusters):
         # List of VMs of this cluster
