@@ -56,5 +56,5 @@ if __name__ == "__main__":
     except OSError:
         print("Error: File could not be opened")
     for element in sil_score:
-        f.write(element + '\n')
+        f.write(str(element) + '\n')
     f.close()
