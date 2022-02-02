@@ -29,7 +29,10 @@ def load_VM(VM_name: str) -> pd.DataFrame:
     """
     VM_path = os.path.join(DATA_PATH, VM_name)
     # Read time series of each Virtual Machine (VM)
-    VM = pd.read_csv(VM_path, sep=';\t', index_col=0, parse_dates=True, squeeze=True, engine='python')
+    VM = pd.read_csv(VM_path, sep=';\t', engine='python')
+    # Parse dates
+    VM['Timestamp [ms]'] = pd.to_datetime(VM['Timestamp [ms]'], unit='s')
+    VM = VM.set_index('Timestamp [ms]')
     # Create new variable memory usage in %
     VM['Memory usage [%]'] = VM['Memory usage [KB]'] * 100 / VM['Memory capacity provisioned [KB]']
     # Avoid division by 0
@@ -126,7 +129,7 @@ def load_clusters(VMs: List[pd.DataFrame], labels: np.ndarray, n_clusters: int) 
     return clusters
 
 
-def plot_timeSeries(data, MA=10, ema=0.05, legend=True, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None,
+def plot_timeSeries(data, MA=10, ema=0.05, legend=True, xlabel='Time', ylabel=None, title=None, xlim=None, ylim=None,
                     xticks=None, figsize=(8, 6), dpi=120, savefig=None, show=True):
     """ Utility to plot Time Series with moving average filters """
 
@@ -154,7 +157,7 @@ def plot_timeSeries(data, MA=10, ema=0.05, legend=True, xlabel=None, ylabel=None
 
 
 def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, marker='k-', legend=False,
-                  xlabel='Timestmaps [ms]', ylabel=None, title=None, xlim=None, ylim=None, xticks=None,
+                  xlabel='Time', ylabel=None, title=None, xlim=None, ylim=None, xticks=None,
                   figsize=(13, 4), dpi=120, savefig=None, **kwargs):
     """ Utility to plot VMs of each cluster
 
@@ -193,12 +196,13 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, marker=
                 plt.subplot(1, 2, 1)
         for VM in VMs_cluster:
             plt.plot(VM, marker, alpha=.2, **kwargs)
+            plt.xticks(rotation=45)
         if legend: plt.legend()
         if xlim is not None: plt.xlim(xlim)
         if ylim is not None: plt.ylim(ylim)
         if xlabel is not None: plt.xlabel(xlabel)
         if ylabel is not None: plt.ylabel(ylabel)
-        if xticks is not None: plt.xticks(xticks)
+        if xticks is not None: plt.xticks(xticks, rotation=45)
         plt.title('VMs in the cluster')
 
         if savefig is not None:
