@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import pandas as pd
+import random
 from tslearn.utils import to_time_series, to_time_series_dataset
 from tslearn.clustering import TimeSeriesKMeans, silhouette_score
 from tslearn.preprocessing import TimeSeriesResampler
@@ -201,6 +202,9 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, marker=
         plt.title('VMs in the cluster')
 
         if savefig is not None:
+            # Create the folder whether not exists
+            if not os.path.exists(os.path.join(FIGURES_PATH, savefig)):
+                os.makedirs(os.path.join(FIGURES_PATH, savefig))
             save_path = os.path.join(FIGURES_PATH, savefig, 'Cluster{}'.format(cluster_num))
             plt.savefig(save_path, bbox_inches='tight')
             plt.close(fig)

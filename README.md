@@ -19,6 +19,6 @@ python optimal_clusters.py -f <features used for clustering> -m path to save the
 
 Example:
 ```
-python optimal_clusters.py -f 'CPU usage [MHZ]'
+python3 optimal_clusters.py -f 'Memory usage [KB]' -m './k_means_memory/' -s 'Clustering/silhouette_memory'
 ```
 
