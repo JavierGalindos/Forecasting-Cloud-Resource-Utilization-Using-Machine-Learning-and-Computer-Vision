@@ -47,7 +47,10 @@ print("--" * 40)
 if __name__ == "__main__":
     print('Finding optimal k')
     print("--" * 40)
-    sil_score = optimal_clusters(features, model_path, fast_validation=args.fast_validation)
+    # Load all VMs (list of VMs)
+    VMs = load_all_VMs()
+    print('Load VM: Completed')
+    sil_score = optimal_clusters(VMs, features, model_path, fast_validation=args.fast_validation)
     plot_silhouette(sil_score, title='K-means Features:{}'.format(features), savefig=figure_path)
     # Save sil_score in a file
     save_path = os.path.join(model_path, 'sil_score.txt')

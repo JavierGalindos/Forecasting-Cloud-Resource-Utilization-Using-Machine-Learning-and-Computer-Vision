@@ -59,27 +59,21 @@ def load_all_VMs(data_path: str = DATA_PATH) -> List[pd.DataFrame]:
     return datacenter
 
 
-def load_datacenter(data_path: str = DATA_PATH) -> pd.DataFrame:
+def load_datacenter(VMs: List[pd.DataFrame]) -> pd.DataFrame:
     """ Creates a dataframe of the whole datacenter (sum of VMs)
 
-    :param data_path:
+    :param VMs: list of VMs
     :return: Pandas DataFrame of the datacenter
     """
-    # New dataframe
-    datacenter = pd.DataFrame()
-    # Get all the series
-    files = os.listdir(data_path)  # Get all the files in that directory
-    for serie in files:
-        VM = load_VM(serie)
-        # Average every variable
-        datacenter = pd.concat([datacenter, VM]).groupby('Timestamp [ms]').mean()
-        # Uncomment the following lines whether you want to accumulate variables but %
-        # # Sum everything but [%] variables (mean)
-        # datacenter = pd.concat(
-        #     [datacenter, VM.loc[:, ~VM.columns.isin(['CPU usage [%]', 'Memory usage [%]'])]]).groupby(
-        #     'Timestamp [ms]').sum()
-        # # Mean in [%] variables
-        # datacenter = pd.concat([datacenter, VM[['CPU usage [%]', 'Memory usage [%]']]]).groupby('Timestamp [ms]').mean()
+    # Merge all the VMs and average every variable
+    datacenter = pd.concat(VMs).groupby('Timestamp [ms]').mean()
+    # Uncomment the following lines whether you want to accumulate variables but %
+    # # Sum everything but [%] variables (mean)
+    # datacenter = pd.concat(
+    #     [datacenter, VM.loc[:, ~VM.columns.isin(['CPU usage [%]', 'Memory usage [%]'])]]).groupby(
+    #     'Timestamp [ms]').sum()
+    # # Mean in [%] variables
+    # datacenter = pd.concat([datacenter, VM[['CPU usage [%]', 'Memory usage [%]']]]).groupby('Timestamp [ms]').mean()
     return datacenter
 
 
@@ -110,36 +104,32 @@ def load_clusters(VMs: List[pd.DataFrame], labels: np.ndarray, n_clusters: int) 
     if n_clusters != len(np.unique(labels)):
         assert "Number of clusters is not correct"
     for cluster_num in range(n_clusters):
-        # Loop over VMs within a cluster
-        cluster = pd.DataFrame()
         # List of VMs of this cluster
         VMs_cluster = [VM for idx, VM in enumerate(VMs) if labels[idx] == cluster_num]
-        for VM in VMs_cluster:
-            # Average on every variable
-            cluster = pd.concat([cluster, VM]).groupby('Timestamp [ms]').mean()
-            # # Sum everything but [%] variables (mean)
-            # cluster = pd.concat(
-            #     [cluster, VM.loc[:, ~VM.columns.isin(['CPU usage [%]', 'Memory usage [%]'])]]).groupby(
-            #     'Timestamp [ms]').sum()
-            # # Mean in [%] variables
-            # cluster = pd.concat([cluster, VM[['CPU usage [%]', 'Memory usage [%]']]]).groupby(
-            #     'Timestamp [ms]').mean()
+        # Average on every variable
+        cluster = pd.concat(VMs_cluster).groupby('Timestamp [ms]').mean()
         # Append cluster
         clusters.append(cluster)
     return clusters
 
 
-def plot_timeSeries(data, MA=10, ema=0.05, legend=True, xlabel='Time', ylabel=None, title=None, xlim=None, ylim=None,
-                    xticks=None, figsize=(8, 6), dpi=120, savefig=None, show=True):
+def plot_timeSeries(data, MA=0, ema=0.05, legend=True, xlabel='Time', ylabel=None, title=None, xlim=None, ylim=None,
+                    xticks=None, figsize=(8, 6), dpi=120, savefig=None, show=True, **kwargs):
     """ Utility to plot Time Series with moving average filters """
 
+    # Define default kwargs
+    defaultKwargs = {'marker': 'o',
+                     'linestyle': '',
+                     'alpha': 0.3,
+                     'markersize': 2}
+    kwargs = {**defaultKwargs, **kwargs}
     if show is not False:
         fig = plt.figure(figsize=figsize, dpi=dpi)
     if type(data) == pd.DataFrame:
         data.dropna(inplace=True)
-    data.plot(label='Raw data')
-    if MA > 0: data.rolling(window=MA).mean().plot(label='MA({}) filter'.format(MA))
-    if ema > 0: data.ewm(alpha=ema, adjust=False).mean().plot(label='EMA {}'.format(ema))
+    data.plot(label='Raw data', **kwargs)
+    if MA > 0: data.rolling(window=MA).mean().plot(label='SMA {}'.format(MA), alpha=0.5)
+    if ema > 0: data.ewm(alpha=ema, adjust=False).mean().plot(label='EMA {}'.format(ema),alpha=0.5)
     if legend: plt.legend()
     if xlim is not None: plt.xlim(xlim)
     if ylim is not None: plt.ylim(ylim)
@@ -156,7 +146,7 @@ def plot_timeSeries(data, MA=10, ema=0.05, legend=True, xlabel='Time', ylabel=No
             plt.show()
 
 
-def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, marker='k-', legend=False,
+def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, filters=True, marker='k-', legend=False,
                   xlabel='Time', ylabel=None, title=None, xlim=None, ylim=None, xticks=None,
                   figsize=(13, 4), dpi=120, savefig=None, **kwargs):
     """ Utility to plot VMs of each cluster
@@ -176,18 +166,36 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, marker=
         if clusters is not None:
             ax1 = plt.subplot(1, 2, 2)
             cluster = clusters[cluster_num]
-            plot_timeSeries(cluster.iloc[:, 0],
-                            title='Average over the cluster',
-                            legend=True,
-                            xlabel=xlabel,
-                            ylabel=ylabel,
-                            xlim=xlim,
-                            ylim=ylim,
-                            xticks=xticks,
-                            figsize=(4, 4),
-                            dpi=dpi,
-                            savefig=None,
-                            show=False)
+            if filters:
+                plot_timeSeries(cluster.iloc[:, 0],
+                                title='Average over the cluster',
+                                legend=True,
+                                xlabel=xlabel,
+                                ylabel=ylabel,
+                                xlim=xlim,
+                                ylim=ylim,
+                                xticks=xticks,
+                                figsize=(4, 4),
+                                dpi=dpi,
+                                savefig=None,
+                                show=False,
+                                **kwargs)
+            else:
+                plot_timeSeries(cluster.iloc[:, 0],
+                                MA=0,
+                                ema=0,
+                                title='Average over the cluster',
+                                legend=True,
+                                xlabel=xlabel,
+                                ylabel=ylabel,
+                                xlim=xlim,
+                                ylim=ylim,
+                                xticks=xticks,
+                                figsize=(4, 4),
+                                dpi=dpi,
+                                savefig=None,
+                                show=False,
+                                **kwargs)
         # Left figure
         if clusters is not None:
             if shared_axis:
@@ -195,7 +203,7 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, marker=
             else:
                 plt.subplot(1, 2, 1)
         for VM in VMs_cluster:
-            plt.plot(VM, marker, alpha=.2, **kwargs)
+            plt.plot(VM, marker, alpha=.2, markersize=0.1)
             plt.xticks(rotation=45)
         if legend: plt.legend()
         if xlim is not None: plt.xlim(xlim)
@@ -216,12 +224,13 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, marker=
             plt.show()
 
 
-def optimal_clusters(features: List[str], models_path: str, length: int = 500, fast_validation: bool = True):
-    # Load all VMs (list of VMs)
-    VMs = load_all_VMs()
-    print('Load VM: Completed')
+def optimal_clusters(data, features: List[str], models_path: str, length: int = 500, fast_validation: bool = True):
+    if data is None:
+        # Load all VMs (list of VMs)
+        data = load_all_VMs()
+        print('Load VM: Completed')
     # Select only one feature & shorten the series due to time limitation
-    VMs_fs_ts, VMs_fs_short_ts = clustering_preprocessing(VMs, features=features, length=length)
+    VMs_fs_ts, VMs_fs_short_ts = clustering_preprocessing(data, features=features, length=length)
     print('Preprocessing: Completed')
     # Loop through different configurations for # of clusters and store the respective values for silhouette:
     sil_scores = []
@@ -266,7 +275,7 @@ def optimal_clusters(features: List[str], models_path: str, length: int = 500, f
     return sil_scores
 
 
-def plot_silhouette(sil_score: List[float], legend=True, xlabel='# of clusters', ylabel='Silhouette coefficient',
+def plot_silhouette(sil_score: List[float], legend=False, xlabel='# of clusters', ylabel='Silhouette coefficient',
                     title='K-means clustering', xlim=None, ylim=None, xticks=np.arange(2, 10), figsize=(8, 6),
                     dpi=120, savefig=None):
     fig = plt.figure(figsize=figsize, dpi=dpi)
@@ -284,3 +293,25 @@ def plot_silhouette(sil_score: List[float], legend=True, xlabel='# of clusters',
         plt.close(fig)
     else:
         plt.show()
+
+
+def elbow_method(models_path: str) -> List[float]:
+    """ Return the intertia for the elbow method
+        The k-means models have to have been previously created
+
+    :param models_path: path to the models
+    :return: list of clusters DataFrames
+    """
+    # Get all the models
+    files = os.listdir(models_path)  # Get all the files in that directory
+    # Models ends with .hdf5
+    models = [_ for _ in files if _.endswith('.hdf5')]
+    inertia = []
+    for _, model in enumerate(models):
+        # Load model
+        try:
+            kmeans_model = TimeSeriesKMeans.from_hdf5(os.path.join(models_path, model))
+        except OSError:
+            print("Could not open the file: {}".format(model))
+        inertia.append(kmeans_model.inertia_)
+    return inertia
