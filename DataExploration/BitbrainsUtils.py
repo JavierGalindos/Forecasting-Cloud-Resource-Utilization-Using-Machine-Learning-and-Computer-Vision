@@ -60,6 +60,31 @@ def load_all_VMs(data_path: str = DATA_PATH) -> List[pd.DataFrame]:
     return datacenter
 
 
+def filter_VMs(VMs: List[pd.DataFrame], mean_th: int = 100, std_th: int = 50, max_th: int = 1000) -> List[pd.DataFrame]:
+    """ Filter the VMs that does not give useful information and distort the algorithms
+
+    Parameters
+    ----------
+    VMs
+        list of VMs
+    mean_th
+        mean threshold
+    std_th
+        std threshold
+    max_th
+        max thresholds
+
+    Returns
+    -------
+    VMs_training
+        List of useful VMs
+    """
+    VMs_training = [VM for VM in VMs if (VM['CPU usage [MHZ]'].mean() > mean_th) or
+                    (VM['CPU usage [MHZ]'].std() > std_th) or
+                    (VM['CPU usage [MHZ]'].max() > max_th)]
+    return VMs_training
+
+
 def load_datacenter(VMs: List[pd.DataFrame]) -> pd.DataFrame:
     """ Creates a dataframe of the whole datacenter (sum of VMs)
 
@@ -447,4 +472,3 @@ def plot_stats(stats_df: pd.DataFrame, features: List[str] = 'CPU usage [MHZ]', 
             plt.close(fig)
         else:
             plt.show()
-
