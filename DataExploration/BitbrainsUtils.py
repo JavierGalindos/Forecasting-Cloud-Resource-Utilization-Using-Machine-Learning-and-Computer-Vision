@@ -7,6 +7,7 @@ from tslearn.utils import to_time_series, to_time_series_dataset
 from tslearn.clustering import TimeSeriesKMeans, silhouette_score
 from tslearn.preprocessing import TimeSeriesResampler
 from typing import List
+import seaborn as sns
 
 ''' Data constants'''
 DATA_PATH = r'../Datasets/fastStorage/2013-8'
@@ -129,7 +130,7 @@ def plot_timeSeries(data, MA=0, ema=0.05, legend=True, xlabel='Time', ylabel=Non
         data.dropna(inplace=True)
     data.plot(label='Raw data', **kwargs)
     if MA > 0: data.rolling(window=MA).mean().plot(label='SMA {}'.format(MA), alpha=0.5)
-    if ema > 0: data.ewm(alpha=ema, adjust=False).mean().plot(label='EMA {}'.format(ema),alpha=0.5)
+    if ema > 0: data.ewm(alpha=ema, adjust=False).mean().plot(label='EMA {}'.format(ema), alpha=0.5)
     if legend: plt.legend()
     if xlim is not None: plt.xlim(xlim)
     if ylim is not None: plt.ylim(ylim)
@@ -295,6 +296,41 @@ def plot_silhouette(sil_score: List[float], legend=False, xlabel='# of clusters'
         plt.show()
 
 
+def get_silhouette_from_models(models_path: str, VMs_ts: np.ndarray) -> List[float]:
+    """ Evaluate the already trained models and get silhouette scores
+
+    Parameters
+    ----------
+    models_path: str
+        path to the models
+    VMs_ts:
+        Time series of the VMs (tslearn)
+
+    Returns
+    -------
+    sil_score
+    """
+    # Get all the models
+    files = os.listdir(models_path)  # Get all the files in that directory
+    # Models ends with .hdf5
+    models = [_ for _ in files if _.endswith('.hdf5')]
+    sil_score = []
+    for _, model in enumerate(models):
+        # Load model
+        try:
+            kmeans_model = TimeSeriesKMeans.from_hdf5(os.path.join(models_path, model))
+        except OSError:
+            print("Could not open the file: {}".format(model))
+        # Predict labels
+        labels = kmeans_model.predict(VMs_ts)
+        sil_score.append(silhouette_score(VMs_ts,
+                                          labels,
+                                          metric="dtw",
+                                          n_jobs=-1,
+                                          verbose=True))
+    return sil_score
+
+
 def elbow_method(models_path: str) -> List[float]:
     """ Return the intertia for the elbow method
         The k-means models have to have been previously created
@@ -315,3 +351,100 @@ def elbow_method(models_path: str) -> List[float]:
             print("Could not open the file: {}".format(model))
         inertia.append(kmeans_model.inertia_)
     return inertia
+
+
+def split_cluster(VMs: List[pd.DataFrame], labels: np.ndarray, model_big_cluster: str, n_clusters: int,
+                  big_cluster_num: int, features: List[str]) -> np.ndarray:
+    """ Split the big cluster in sub-clusters
+        Returns the new labels with the sub-clusters
+
+    :param VMs: List of VM DataFrames
+    :param labels: cluster assigned for each VM
+    :param model_big_cluster: directory of the k-means model. Ex: './kmeans_models/big_cluster/kmeans_2.hdf5'
+    :param n_clusters:
+    :param big_cluster_num: number of the big cluster
+    :return: labels with sub-clusters
+    """
+
+    # Copy labels
+    new_labels = np.copy(labels)
+
+    big_cluster = [VM for idx, VM in enumerate(VMs) if labels[idx] == big_cluster_num]
+    VMs_fs_ts, VMs_fs_short_ts = clustering_preprocessing(big_cluster, features=features, length=500)
+    # Load model
+    try:
+        kmeans_model = TimeSeriesKMeans.from_hdf5(model_big_cluster)
+    except OSError:
+        print("Could not open the file: {}".format(model_big_cluster))
+    # cluster assigned for each VM within the big cluster
+    labels_bigCluster = kmeans_model.predict(VMs_fs_short_ts)
+    idx_2 = 0  # Index for big cluster
+    # Loop over every VM
+    for idx, VM in enumerate(VMs):
+        # If the VM is in the big cluster, change the label
+        if labels[idx] == big_cluster_num:
+            new_labels[idx] = labels_bigCluster[idx_2] + n_clusters
+            idx_2 += 1  # Go to next element of big cluster
+    new_labels[new_labels == max(new_labels)] = 0  # First cluster number is 0 for correct indexing
+    return new_labels
+
+
+# Descriptive statistics
+
+def descriptive_stats(VMs: List[pd.DataFrame], features: List[str] = 'CPU usage [MHZ]') -> pd.DataFrame:
+    """ Create a DataFrame of descriptive statistics of the VMs
+
+    Parameters
+    ----------
+    VMs
+        List of VM DataFrames
+    features
+        features to compute the statistics
+    Returns
+    -------
+    descriptive_stats_df
+        DataFrame of descriptive statistics of the VMs
+    """
+
+    stats = []
+    cum_sum = []
+    for idx, VM in enumerate(VMs):
+        # Mean, min, max, median, quantiles, etc.
+        stats.append(VM[features].describe())
+        # Sum over the series
+        cum_sum.append(VM[features].sum())
+    # Create dataframe
+    descriptive_stats_df = pd.DataFrame(stats, index=range(len(VMs)))
+    descriptive_stats_df['sum'] = cum_sum
+    return descriptive_stats_df
+
+
+def plot_stats(stats_df: pd.DataFrame, features: List[str] = 'CPU usage [MHZ]', savefig=None):
+    # Create the folder whether not exists
+    if savefig is not None:
+        if not os.path.exists(os.path.join(FIGURES_PATH, savefig)):
+            os.makedirs(os.path.join(FIGURES_PATH, savefig))
+    # Bar plots
+    for column in stats_df.columns:
+        fig = plt.figure()
+        plt.title('Descriptive statistics {}: {}'.format(features, column))
+        plt.bar(np.arange(1250), stats_df[column])
+        plt.xlabel('VM')
+        plt.ylabel(features)
+        if savefig is not None:
+            save_path = os.path.join(FIGURES_PATH, savefig, 'barplot_{}'.format(column))
+            plt.savefig(save_path, bbox_inches='tight')
+            plt.close(fig)
+        else:
+            plt.show()
+    # Histograms
+    for column in stats_df.columns:
+        fig = plt.figure()
+        sns.histplot(data=stats_df, x=column).set(title='Histogram {}'.format(features))
+        if savefig is not None:
+            save_path = os.path.join(FIGURES_PATH, savefig, 'histogram_{}'.format(column))
+            plt.savefig(save_path, bbox_inches='tight')
+            plt.close(fig)
+        else:
+            plt.show()
+
