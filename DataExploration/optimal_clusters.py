@@ -49,7 +49,7 @@ if __name__ == "__main__":
     print("--" * 40)
     # Load all VMs (list of VMs)
     VMs = load_all_VMs()
-    VMs_training = filter_VMs(VMs, mean_th=100, std_th=50, max_th=1000)
+    VMs_training = filter_VMs(VMs, mean_th=200, std_th=50, max_th=1000)
     print('Load VM: Completed')
     sil_score = optimal_clusters(VMs_training, features, model_path, fast_validation=args.fast_validation)
     plot_silhouette(sil_score, title='K-means Features:{}'.format(features), savefig=figure_path)
