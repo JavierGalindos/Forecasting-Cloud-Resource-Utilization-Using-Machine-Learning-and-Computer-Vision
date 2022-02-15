@@ -53,6 +53,7 @@ def load_all_VMs(data_path: str = DATA_PATH) -> List[pd.DataFrame]:
     :return: list of DataFrames of each VM
     """
     files = os.listdir(data_path)  # Get all the files in that directory
+    files.sort()  # Short the files (compatible with mac)
     datacenter = []
     for idx, serie in enumerate(files):
         VM = load_VM(serie)
@@ -174,7 +175,7 @@ def plot_timeSeries(data, MA=0, ema=0.05, legend=True, xlabel='Time', ylabel=Non
 
 def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, filters=True, marker='k-', legend=False,
                   xlabel='Time', ylabel=None, title=None, xlim=None, ylim=None, xticks=None,
-                  figsize=(13, 4), dpi=120, savefig=None, **kwargs):
+                  figsize=(13, 6), dpi=120, savefig=None, **kwargs):
     """ Utility to plot VMs of each cluster
 
         Generate two subfigures:
@@ -186,6 +187,7 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, filters
         # List of VMs of this cluster
         VMs_cluster = [VM for idx, VM in enumerate(data) if labels[idx] == cluster_num]
         fig = plt.figure(figsize=figsize, dpi=dpi)
+        plt.tight_layout()
         title_fig = title + ' Cluster {} ({} VMs)'.format(cluster_num, len(VMs_cluster))
         if title is not None: fig.suptitle(title_fig, fontsize=14)
         # Right figure
@@ -230,7 +232,7 @@ def plot_clusters(data, labels, clusters, n_clusters, shared_axis=False, filters
                 plt.subplot(1, 2, 1)
         for VM in VMs_cluster:
             plt.plot(VM, marker, alpha=.2, markersize=0.1)
-            plt.xticks(rotation=45)
+            plt.xticks(rotation=30)
         if legend: plt.legend()
         if xlim is not None: plt.xlim(xlim)
         if ylim is not None: plt.ylim(ylim)
