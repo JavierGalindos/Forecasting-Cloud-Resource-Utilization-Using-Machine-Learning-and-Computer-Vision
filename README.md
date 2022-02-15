@@ -8,6 +8,8 @@ Utilities for the Bitbrains dataset
 ### Notebook analyzing the dataset
 [Bitbrains data exploration](DataExploration/BitbrainsDataset.ipynb)
 
+### ClusteringUtils.py
+Utilities for the clustering in the Bitbrains dataset
 ### optimal_cluster.py
 Finds the optimal number of clustering using silhouette coefficient.
 Generates a figure.

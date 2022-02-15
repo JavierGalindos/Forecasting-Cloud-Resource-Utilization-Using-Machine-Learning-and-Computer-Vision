@@ -1,5 +1,6 @@
 import argparse
 from BitbrainsUtils import *
+from ClusteringUtils import *
 
 # change path in BitbrainsUtils.py if needed
 
