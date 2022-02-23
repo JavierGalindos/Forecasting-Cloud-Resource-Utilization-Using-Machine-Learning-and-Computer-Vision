@@ -3,9 +3,8 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import LSTM_Prep
-from DataExploration.BitbrainsUtils import load_VM
 
-FIGURES_PATH = '../Figures/Modeling/LSTM'
+FIGURES_PATH = '../../Figures/Modeling/LSTM'
 
 if not os.access(FIGURES_PATH, os.F_OK):
     os.mkdir(FIGURES_PATH)
@@ -15,10 +14,9 @@ if not os.access(FIGURES_PATH, os.W_OK):
 else:
     print('figures saved to {}'.format(FIGURES_PATH))
 
-
 if __name__ == "__main__":
     # Data
-    VM = pd.read_csv('../Datasets/fastStorage/2013-8/917.csv', sep=';\t', engine='python')
+    VM = pd.read_csv('../../Datasets/fastStorage/2013-8/917.csv', sep=';\t', engine='python')
     dat = VM
 
     split = 0.8
@@ -104,4 +102,5 @@ if __name__ == "__main__":
     # Checking its accuracy on our training set
     future.predicted_vs_actual(X_min=X_min, X_max=X_max, numeric_colname='CPU usage [MHZ]')
     # Predicting 'x' timesteps out
-    future.predict_future(X_min=X_min, X_max=X_max, numeric_colname='CPU usage [MHZ]', timesteps_to_predict=15, return_future=True)
+    future.predict_future(X_min=X_min, X_max=X_max, numeric_colname='CPU usage [MHZ]', timesteps_to_predict=15,
+                          return_future=True)

@@ -43,6 +43,9 @@ def load_VM(VM_name: str) -> pd.DataFrame:
     VM['Memory usage [%]'] = VM['Memory usage [%]'].fillna(0)
     # Group by index and average (avoid duplicate timestamps)
     VM = VM.groupby(VM.index).mean()
+    # Floor time index
+    VM.index = VM.index.floor(freq='5T')
+    VM = VM.groupby(VM.index).mean()
     # Avoid NaN and Inf values
     VM.replace([np.inf, -np.inf], np.nan, inplace=True)
     VM.dropna(inplace=True)

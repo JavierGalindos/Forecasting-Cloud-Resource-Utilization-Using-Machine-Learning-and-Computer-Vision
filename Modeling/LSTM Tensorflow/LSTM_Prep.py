@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 
-FIGURES_PATH = '../Figures/Modeling/LSTM'
+FIGURES_PATH = '../../Figures/Modeling/LSTM'
 
 
 class Data_Prep:
@@ -52,7 +52,7 @@ class Series_Prep:
         for index in range(len(self.rnn_df) - sequence_length):
             result.append(self.rnn_df[self.numeric_colname][index: index + sequence_length])
 
-            # Getting the initial train_test split for our min/max val scalar
+        # Getting the initial train_test split for our min/max val scalar
         train_test_split = 0.9
         row = int(round(train_test_split * np.array(result).shape[0]))
         train = np.array(result)[:row, :]
