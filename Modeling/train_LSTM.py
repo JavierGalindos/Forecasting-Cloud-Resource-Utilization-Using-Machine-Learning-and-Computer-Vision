@@ -40,7 +40,7 @@ parser.add_argument('-n', '--name', default='LSTM',
 parser.add_argument('-s', '--figure_path', default="LSTM",
                     help='Destination for figures to be saved at')
 
-parser.add_argument('-i', '--input_length', default=288,
+parser.add_argument('-i', '--input_length', default=70,
                     help='input_chunk_length ')
 
 parser.add_argument('-d', '--dim', default=20,
@@ -85,6 +85,7 @@ def eval_model(model):
     fig = plt.figure(figsize=(8, 5), dpi=150)
     ts_trf.plot(label="actual")
     pred_series.plot(label="forecast")
+    plt.ylabel('CPU usage')
     plt.title("MAPE: {:.2f}%".format(mape(pred_series, val_trf)))
     plt.legend()
     # Saving figure

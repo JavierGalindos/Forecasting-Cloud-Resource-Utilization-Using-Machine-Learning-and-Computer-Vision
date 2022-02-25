@@ -10,13 +10,14 @@ import seaborn as sns
 DATA_PATH = r'../Datasets/fastStorage/2013-8'
 FIGURES_PATH = '../Figures/DataExploration/'
 
-if not os.access(FIGURES_PATH, os.F_OK):
-    os.mkdir(FIGURES_PATH)
-if not os.access(FIGURES_PATH, os.W_OK):
-    print('Cannot write to {}, please fix it.'.format(FIGURES_PATH))
-    exit()
-else:
-    print('figures saved to {}'.format(FIGURES_PATH))
+# Uncomment when using Data exploration
+# if not os.access(FIGURES_PATH, os.F_OK):
+#     os.mkdir(FIGURES_PATH)
+# if not os.access(FIGURES_PATH, os.W_OK):
+#     print('Cannot write to {}, please fix it.'.format(FIGURES_PATH))
+#     exit()
+# else:
+#     print('figures saved to {}'.format(FIGURES_PATH))
 
 
 def load_VM(VM_name: str) -> pd.DataFrame:
