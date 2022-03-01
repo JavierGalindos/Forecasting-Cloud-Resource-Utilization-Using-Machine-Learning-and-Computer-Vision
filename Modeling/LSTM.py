@@ -23,7 +23,7 @@ else:
 
 class WindowGenerator:
     def __init__(self, input_width, label_width, shift,
-                 train_df, val_df, test_df,
+                 train_df, val_df, test_df, batch_size,
                  label_columns=None):
         # Store the raw data.
         self.train_df = train_df
@@ -42,6 +42,7 @@ class WindowGenerator:
         self.input_width = input_width
         self.label_width = label_width
         self.shift = shift
+        self.bath_size = batch_size
 
         self.total_window_size = input_width + shift
 
@@ -117,7 +118,9 @@ class WindowGenerator:
             sequence_length=self.total_window_size,
             sequence_stride=1,
             shuffle=True,
-            batch_size=32, )
+            # batch_size=self.bath_size,
+            batch_size=data.shape[0]
+            )
 
         ds = ds.map(self.split_window)
         return ds
@@ -156,6 +159,7 @@ def add_daily_info(df: pd.DataFrame) -> pd.DataFrame:
     day = 60 * 24 / 5
     df['Day sin'] = np.sin(timestamp_s * (2 * np.pi / day))
     df['Day cos'] = np.cos(timestamp_s * (2 * np.pi / day))
+    df['Hour'] = np.array(df.index.floor(freq='H').hour)
     return df
 
 
@@ -169,9 +173,9 @@ def split_data(df: pd.DataFrame, training: float = 0.7, validation: float = 0.2,
 
 def data_transformation(scaler, train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame):
     # Must return a Pandas DataFrame
-    train_df.loc[:, train_df.columns] = scaler.fit_transform(train_df.loc[:, train_df.columns])
-    val_df.loc[:, val_df.columns] = scaler.transform(val_df.loc[:, val_df.columns])
-    test_df.loc[:, test_df.columns] = scaler.transform(test_df.loc[:, test_df.columns])
+    train_df.loc[:, train_df.columns] = scaler.fit_transform(train_df)
+    val_df.loc[:, val_df.columns] = scaler.transform(val_df)
+    test_df.loc[:, test_df.columns] = scaler.transform(test_df)
     return train_df, val_df, test_df
 
 
@@ -179,7 +183,8 @@ class LstmModel:
     def __init__(self, input_width, label_width, df,
                  train_df, val_df, test_df,
                  epoch=20, units=20, layers=1,
-                 dropout=0, name='LSTM',
+                 dropout=0, batch_size=128,
+                 name='LSTM',
                  ):
         # Store the raw data.
         self.df = df
@@ -196,6 +201,7 @@ class LstmModel:
         self.units = units
         self.layer = layers
         self.dropout = dropout
+        self.batch_size = batch_size
         self.name = name
 
         # Window
@@ -206,6 +212,7 @@ class LstmModel:
             train_df=train_df,
             val_df=val_df,
             test_df=test_df,
+            batch_size=self.batch_size,
             label_columns=['CPU usage [MHZ]'])
 
         # Model
@@ -217,9 +224,10 @@ class LstmModel:
             else:
                 self.model.add(tf.keras.layers.LSTM(self.units, dropout=self.dropout, return_sequences=True))
         # Shape => [batch, time, features]
+        # self.model.add(tf.keras.layers.Dense(units=1, activation='tanh'))
         self.model.add(tf.keras.layers.Dense(units=1))
 
-    def compile_and_fit(self, patience=5):
+    def compile_and_fit(self, patience=50):
         print('Training:')
         # Early stopping
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -231,17 +239,20 @@ class LstmModel:
         log_dir = f'logs/fit/{self.name}'
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-        # self.model.build(self.window.train)
-        # self.model.summary()
+        print(f'Input shape(batch, time, features): {self.window.example[0].shape}')
+        print(f'Output shape:{self.model(self.window.example[0]).shape}')
+        self.model.build(self.window.example[0].shape)
+        self.model.summary()
 
         self.model.compile(loss=tf.losses.MeanSquaredError(),
                            optimizer=tf.optimizers.Adam(),
-                           metrics=[tf.metrics.MeanAbsolutePercentageError(),
-                                    tf.metrics.MeanAbsoluteError()])
+                           metrics=[tf.metrics.MeanAbsoluteError()]
+                           )
 
         history = self.model.fit(self.window.train, epochs=self.epoch,
                                  validation_data=self.window.val,
                                  callbacks=[early_stopping, tensorboard_callback])
+
 
         # Loss History figure
         fig = plt.figure()
@@ -261,13 +272,13 @@ class LstmModel:
 
     def prediction(self, scaler):
         print('Inference:')
-        pred = self.model.predict(self.window.test_pred)
+        pred = self.model.predict(self.window.test_pred, batch_size=128)
         # Convert to dataframe
         pred_df = pd.DataFrame(pred, columns=['CPU usage [MHZ]'])
         pred_df.index = self.test_df.index
         # Inverse transform
-        pred_df['Day sin'] = self.test_df['Day sin']
-        pred_df['Day cos'] = self.test_df['Day cos']
+        # pred_df['Day sin'] = self.test_df['Day sin']
+        # pred_df['Day cos'] = self.test_df['Day cos']
         pred_trf = scaler.inverse_transform(pred_df)
         pred_df_trf = pd.DataFrame(data=pred_trf, columns=self.test_df.columns, index=self.test_df.index)
 

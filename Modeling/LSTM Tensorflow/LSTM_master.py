@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import LSTM_Prep
 
-FIGURES_PATH = '../../Figures/Modeling/LSTM'
+FIGURES_PATH = '../Figures/Modeling/LSTM'
 
 if not os.access(FIGURES_PATH, os.F_OK):
     os.mkdir(FIGURES_PATH)
@@ -16,15 +16,15 @@ else:
 
 if __name__ == "__main__":
     # Data
-    VM = pd.read_csv('../../Datasets/fastStorage/2013-8/917.csv', sep=';\t', engine='python')
+    VM = pd.read_csv('../Datasets/fastStorage/2013-8/917.csv', sep=';\t', engine='python')
     dat = VM
 
-    split = 0.8
-    sequence_length = 288
+    split = 0.9
+    sequence_length = 50
 
     data_prep = LSTM_Prep.Data_Prep(dataset=dat)
     rnn_df, validation_df = data_prep.preprocess_rnn(date_colname='Timestamp [ms]', numeric_colname='CPU usage [MHZ]',
-                                                     pred_set_timesteps=288)
+                                                     pred_set_timesteps=864)
 
     series_prep = LSTM_Prep.Series_Prep(rnn_df=rnn_df, numeric_colname='CPU usage [MHZ]')
     window, X_min, X_max = series_prep.make_window(sequence_length=sequence_length,
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
 
     # Epochs and validation split
-    EPOCHS = 201  # 201
+    EPOCHS = 50  # 201
     validation = 0.05
 
     # Instantiate the model
@@ -78,6 +78,8 @@ if __name__ == "__main__":
 
     model.compile(loss='mse', optimizer='adam')
 
+    model.summary()
+
     # History object for plotting our model loss by epoch
     history = model.fit(X_train, y_train, epochs=EPOCHS, validation_split=validation,
                         callbacks=[rlrop])
@@ -89,7 +91,7 @@ if __name__ == "__main__":
     plt.ylabel('Loss')
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
-    # plt.show()
+    plt.show()
     save_path = os.path.join(FIGURES_PATH, 'Loss')
     plt.savefig(save_path, bbox_inches='tight')
     plt.close(fig)

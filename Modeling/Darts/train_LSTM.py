@@ -16,7 +16,7 @@ from darts.utils.statistics import check_seasonality, plot_acf
 from darts.utils.timeseries_generation import datetime_attribute_timeseries
 
 from DataExploration.BitbrainsUtils import load_VM
-FIGURES_PATH = '../Figures/Modeling'
+FIGURES_PATH = '../../Figures/Modeling'
 from darts import TimeSeries
 
 

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 
-FIGURES_PATH = '../../Figures/Modeling/LSTM'
+FIGURES_PATH = '../Figures/Modeling/LSTM'
 
 
 class Data_Prep:
@@ -150,7 +150,7 @@ class Predict_Future:
         plt.plot(reverse_curr_frame[numeric_colname])
         plt.plot(reverse_future[numeric_colname])
         plt.title("Predicted Points Vs. Actuals (Validation)")
-        # plt.show()
+        plt.show()
         save_path = os.path.join(FIGURES_PATH, 'predicted_actual')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
