@@ -260,7 +260,7 @@ class LstmModel:
         # Save checkpoint
         checkpoint_filepath = f'logs/{self.name}/checkpoints'
         if not os.access(checkpoint_filepath, os.F_OK):
-            os.mkdir(checkpoint_filepath)
+            os.makedirs(checkpoint_filepath)
         if not os.access(checkpoint_filepath, os.W_OK):
             print('Cannot write to {}, please fix it.'.format(checkpoint_filepath))
             exit()
