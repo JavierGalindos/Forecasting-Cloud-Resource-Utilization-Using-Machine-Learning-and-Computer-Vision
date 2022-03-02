@@ -118,28 +118,41 @@ class WindowGenerator:
             sequence_length=self.total_window_size,
             sequence_stride=1,
             shuffle=True,
-            # batch_size=self.bath_size,
-            batch_size=data.shape[0]
-            )
+            batch_size=self.bath_size,
+        )
 
         ds = ds.map(self.split_window)
         return ds
 
+    def create_dataset(self, data):
+        data = np.array(data, dtype=np.float32)
+        # Shape for tensorflow: (Samples, time steps, features)
+        input = np.empty((len(data) - self.input_width, self.input_width, data.shape[1]))
+        # Need to change 3rd dimension if you want to predict more than 1 output at a time
+        labels = np.empty((len(data) - self.input_width, self.label_width, 1))
+        # for i in range(len(data) - self.input_width - 1):
+        for i in range(len(data) - self.input_width):
+            for j in range(data.shape[1]):
+                input[i, :, j] = data[i:(i + self.input_width), j]
+            # 0 is the column to predict: 'CPU Usage [MHZ]'
+            labels[i, :, 0] = data[(i + self.input_width):(i + self.input_width + self.label_width), 0]
+        return input, labels
+
     @property
     def train(self):
-        return self.make_dataset(self.train_df)
+        return self.create_dataset(self.train_df)
 
     @property
     def val(self):
-        return self.make_dataset(self.val_df)
+        return self.create_dataset(self.val_df)
 
     @property
     def test(self):
-        return self.make_dataset(self.test_df)
+        return self.create_dataset(self.test_df)
 
     @property
     def test_pred(self):
-        return self.make_dataset(self.test_pred_df)
+        return self.create_dataset(self.test_pred_df)
 
     @property
     def example(self):
@@ -165,17 +178,18 @@ def add_daily_info(df: pd.DataFrame) -> pd.DataFrame:
 
 def split_data(df: pd.DataFrame, training: float = 0.7, validation: float = 0.2, test: float = 0.1):
     n = len(df)
-    train_df = df[0:int(n * training)]
-    val_df = df[int(n * training):int(n * (training + validation))]
-    test_df = df[int(n * (training + validation)):]
+    df_copy = df.copy()
+    train_df = df_copy[0:int(n * training)]
+    val_df = df_copy[int(n * training):int(n * (training + validation))]
+    test_df = df_copy[int(n * (training + validation)):]
     return train_df, val_df, test_df
 
 
 def data_transformation(scaler, train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame):
     # Must return a Pandas DataFrame
-    train_df.loc[:, train_df.columns] = scaler.fit_transform(train_df)
-    val_df.loc[:, val_df.columns] = scaler.transform(val_df)
-    test_df.loc[:, test_df.columns] = scaler.transform(test_df)
+    train_df.loc[:, train_df.columns] = scaler.fit_transform(train_df.loc[:, train_df.columns])
+    val_df.loc[:, val_df.columns] = scaler.transform(val_df.loc[:, val_df.columns])
+    test_df.loc[:, test_df.columns] = scaler.transform(test_df.loc[:, test_df.columns])
     return train_df, val_df, test_df
 
 
@@ -220,7 +234,8 @@ class LstmModel:
         for _ in range(layers):
             if label_width == 1:
                 # Shape [batch, time, features] => [batch, time, lstm_units]
-                self.model.add(tf.keras.layers.LSTM(self.units, dropout=self.dropout, return_sequences=False))
+                self.model.add(tf.keras.layers.LSTM(self.units, input_shape=(self.input_width, self.df.shape[1]),
+                                                    dropout=self.dropout, return_sequences=False))
             else:
                 self.model.add(tf.keras.layers.LSTM(self.units, dropout=self.dropout, return_sequences=True))
         # Shape => [batch, time, features]
@@ -236,23 +251,36 @@ class LstmModel:
 
         # Tensorboard
         # log_dir = f'logs/fit/{self.name}' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        log_dir = f'logs/fit/{self.name}'
+        log_dir = f'logs/{self.name}/tensorboard'
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-        print(f'Input shape(batch, time, features): {self.window.example[0].shape}')
-        print(f'Output shape:{self.model(self.window.example[0]).shape}')
+        # Save checkpoint
+        checkpoint_filepath = os.path.join(f'logs/{self.name}/checkpoints',
+                                           'best-epoch={epoch:03d}-loss{val_loss:.2f}.hdf5')
+        model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath=checkpoint_filepath,
+            save_weights_only=True,
+            monitor='val_mean_absolute_error',
+            mode='min',
+            save_best_only=True)
+
+        print(f'Input shape (batch, time, features): {self.window.train[0].shape}')
+        print(f'Labels shape (batch, time, features): {self.window.train[1].shape}')
+        print(f'Output shape:{self.model(self.window.train[0]).shape}')
         self.model.build(self.window.example[0].shape)
         self.model.summary()
 
         self.model.compile(loss=tf.losses.MeanSquaredError(),
                            optimizer=tf.optimizers.Adam(),
-                           metrics=[tf.metrics.MeanAbsoluteError()]
+                           metrics=tf.metrics.MeanAbsoluteError()
                            )
 
-        history = self.model.fit(self.window.train, epochs=self.epoch,
-                                 validation_data=self.window.val,
-                                 callbacks=[early_stopping, tensorboard_callback])
-
+        history = self.model.fit(self.window.train[0],
+                                 self.window.train[1],
+                                 epochs=self.epoch,
+                                 batch_size=self.batch_size,
+                                 validation_data=(self.window.val[0], self.window.val[1]),
+                                 callbacks=[early_stopping, tensorboard_callback, model_checkpoint_callback])
 
         # Loss History figure
         fig = plt.figure()
@@ -272,26 +300,29 @@ class LstmModel:
 
     def prediction(self, scaler):
         print('Inference:')
-        pred = self.model.predict(self.window.test_pred, batch_size=128)
+        pred = self.model.predict(self.window.test_pred[0], batch_size=self.batch_size)
         # Convert to dataframe
         pred_df = pd.DataFrame(pred, columns=['CPU usage [MHZ]'])
         pred_df.index = self.test_df.index
         # Inverse transform
-        # pred_df['Day sin'] = self.test_df['Day sin']
-        # pred_df['Day cos'] = self.test_df['Day cos']
         pred_trf = scaler.inverse_transform(pred_df)
-        pred_df_trf = pd.DataFrame(data=pred_trf, columns=self.test_df.columns, index=self.test_df.index)
+        pred_df_trf = pd.DataFrame(data=pred_trf, columns=['CPU usage [MHZ]'], index=self.test_df.index)
+        # Whole set
+        # Convert to dataframe
+        df_trf = scaler.inverse_transform(self.df)
+        df_df_trf = pd.DataFrame(data=df_trf, columns=self.df.columns, index=self.df.index)
+        # Test set
+        test_trf = scaler.inverse_transform(self.test_df)
+        test_df_trf = pd.DataFrame(data=test_trf, columns=self.test_df.columns, index=self.test_df.index)
+        val_mape = self.model.evaluate(self.window.val[0])
 
-        # test_trf = scaler.inverse_transform(self.test_df)
-        # test_df_trf = pd.DataFrame(data=test_trf, columns=self.test_df.columns, index=self.test_df.index)
-        val_mape = self.model.evaluate(self.window.val)
-        # Figure
-        fig = plt.figure()
+        # Figure forecast
+        fig = plt.figure(dpi=200)
         plt.grid()
         self.df['CPU usage [MHZ]'].plot(label='actual', color='k')
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast')
         plt.ylabel('CPU usage [MHz]')
-        plt.title(f'Val MAPE: {val_mape}')
+        plt.title(f'Val MAPE: {val_mape[1]:.3f}')
         plt.grid()
         plt.legend()
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
@@ -299,16 +330,39 @@ class LstmModel:
         save_path = os.path.join(FIGURES_PATH, self.name, 'forecast')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
+
+        # Figure zoom
+        fig = plt.figure(dpi=200)
+        plt.grid()
+        test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='k')
+        pred_df_trf['CPU usage [MHZ]'].plot(label='forecast')
+        plt.ylabel('CPU usage [MHz]')
+        plt.title(f'Val MAPE:{val_mape[1]:.3f}')
+        plt.grid()
+        plt.legend()
+        if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
+            os.mkdir(os.path.join(FIGURES_PATH, self.name))
+        save_path = os.path.join(FIGURES_PATH, self.name, 'forecast_zoom')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
         return pred_df_trf
 
     def evaluation(self, pred, scaler):
-        performance_val = self.model.evaluate(self.window.val)
+        performance_val = self.model.evaluate(self.window.val[0])
         test_trf = scaler.inverse_transform(self.test_df)
         y_true = test_trf[:, 0]
         y_pred = np.array(pred['CPU usage [MHZ]'])
-        performance_test = {}
-        performance_test['MAE'] = tf.keras.metrics.mean_absolute_error(y_true, y_pred)
-        performance_test['MAPE'] = tf.keras.metrics.mean_absolute_percentage_error(y_true, y_pred)
-        performance_test['MSE'] = tf.keras.metrics.mean_squared_error(y_true, y_pred)
+        performance_test = {'MAE': np.array(tf.keras.metrics.mean_absolute_error(y_true, y_pred)),
+                            'MAPE': np.array(tf.keras.metrics.mean_absolute_percentage_error(y_true, y_pred)),
+                            'MSE': np.array(tf.keras.metrics.mean_squared_error(y_true, y_pred))}
 
+        # Save metrics
+        metrics = pd.DataFrame.from_dict(performance_test, orient='index')
+        try:
+            filename = os.path.join('logs', self.name, 'metrics.txt')
+            file = open(filename, 'wt')
+            file.write(str(metrics))
+            file.close()
+        except:
+            print("Unable to write to file")
         return performance_val, performance_test

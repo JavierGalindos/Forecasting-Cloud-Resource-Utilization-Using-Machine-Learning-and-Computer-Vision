@@ -2,11 +2,46 @@
 
 ## LSTM
 
-## Load Tensorboard
+
+### LSTM_train.py
+Trains an LSTM model using Keras and Tensorflow.
+
+To run:
+```
+python LSTM_train.py -e <number of epoch> -n <name of the model> -s <path to save the figure> -i <input_length> -d <number of neurons> -l <number or rnn layers --dropout <droput rate>  --label <labels length>
+```
+
+Example:
+```
+export PYTHONPATH='/Users/javier.galindos/Library/CloudStorage/OneDrive-FundaciónIMDEASoftware/Documents/Code/intern-project-javier'
+python3 LSTM_train.py -e 100 -n 'input_50' -i 50 -s 'input_length'
+```
+
+### Load Tensorboard
 To check training process:
 ```
-tensorboard --logdir './Modeling/darts_logs/{model_name}/logs'  
+tensorboard --logdir='Modeling/logs/{model_name}/tensorboard' 
 ```
+
+If running from remote server (port forwarding)
+Local terminal:
+```
+ssh -N -L 6006:localhost:6006 javier.galindos@machine-learning.imdea
+```
+
+## Run jypyter in ssh server
+Remote terminal:
+```
+export PYTHONPATH='/home/javier.galindos/intern-project-javier/'
+jupyter notebook --no-browser --port=8080
+```
+
+Local terminal:
+```
+ssh -N -L 8080:localhost:8080 javier.galindos@machine-learning.imdea
+```
+
+## Darts
 ### train_LSTM.py
 Trains an LSTM model over the Darts framework.
 
@@ -19,18 +54,5 @@ Example:
 ```
 export PYTHONPATH='/Users/javier.galindos/Library/CloudStorage/OneDrive-FundaciónIMDEASoftware/Documents/Code/intern-project-javier'
 python3 train_LSTM.py -e 20 -n '_input_1day' -i 288 -s 'LSTM/input_chunk'
-```
-
-
-## Run jypyter in ssh server
-Remote terminal:
-```
-export PYTHONPATH='/home/javier.galindos/intern-project-javier/'
-jupyter notebook --no-browser --port=8080
-```
-
-Local terminal:
-```
-ssh -N -L 8080:localhost:8080 javier.galindos@machine-learning.imdea
 ```
 
