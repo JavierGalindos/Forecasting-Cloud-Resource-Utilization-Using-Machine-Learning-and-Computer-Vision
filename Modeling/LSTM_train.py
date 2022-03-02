@@ -69,6 +69,7 @@ if __name__ == "__main__":
     # LSTM model
     lstm_model = LstmModel(input_width=INPUT_LENGTH,
                            label_width=LABEL_LENGTH,
+                           name=NAME,
                            df=df,
                            train_df=train_df,
                            val_df=val_df,

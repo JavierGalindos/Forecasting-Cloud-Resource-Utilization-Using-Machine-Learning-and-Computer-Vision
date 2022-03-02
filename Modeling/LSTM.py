@@ -231,13 +231,16 @@ class LstmModel:
 
         # Model
         self.model = tf.keras.models.Sequential()
-        for _ in range(layers):
-            if label_width == 1:
-                # Shape [batch, time, features] => [batch, time, lstm_units]
-                self.model.add(tf.keras.layers.LSTM(self.units, input_shape=(self.input_width, self.df.shape[1]),
-                                                    dropout=self.dropout, return_sequences=False))
-            else:
+        if self.layer == 1:
+            # Shape [batch, time, features] => [batch, time, lstm_units]
+            self.model.add(tf.keras.layers.LSTM(self.units, input_shape=(self.input_width, self.df.shape[1]),
+                                                dropout=self.dropout, return_sequences=False))
+        else:
+            for _ in range(self.layer - 1):
                 self.model.add(tf.keras.layers.LSTM(self.units, dropout=self.dropout, return_sequences=True))
+
+            self.model.add(tf.keras.layers.LSTM(self.units, dropout=self.dropout, return_sequences=False))
+
         # Shape => [batch, time, features]
         # self.model.add(tf.keras.layers.Dense(units=1, activation='tanh'))
         self.model.add(tf.keras.layers.Dense(units=1))
@@ -255,8 +258,13 @@ class LstmModel:
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
         # Save checkpoint
-        checkpoint_filepath = os.path.join(f'logs/{self.name}/checkpoints',
-                                           'best-epoch={epoch:03d}-loss{val_loss:.2f}.hdf5')
+        checkpoint_filepath = f'logs/{self.name}/checkpoints'
+        if not os.access(checkpoint_filepath, os.F_OK):
+            os.mkdir(checkpoint_filepath)
+        if not os.access(checkpoint_filepath, os.W_OK):
+            print('Cannot write to {}, please fix it.'.format(checkpoint_filepath))
+            exit()
+        checkpoint_filepath = os.path.join(checkpoint_filepath, 'best-epoch={epoch:03d}-loss{val_loss:.2f}.hdf5')
         model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_filepath,
             save_weights_only=True,
