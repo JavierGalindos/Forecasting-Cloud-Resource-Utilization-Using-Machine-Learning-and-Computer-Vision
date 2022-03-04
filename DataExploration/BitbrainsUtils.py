@@ -10,6 +10,7 @@ import seaborn as sns
 DATA_PATH = r'../Datasets/fastStorage/2013-8'
 FIGURES_PATH = '../Figures/DataExploration/'
 
+
 # Uncomment when using Data exploration
 # if not os.access(FIGURES_PATH, os.F_OK):
 #     os.mkdir(FIGURES_PATH)
@@ -221,3 +222,28 @@ def plot_stats(stats_df: pd.DataFrame, features: List[str] = 'CPU usage [MHZ]', 
             plt.close(fig)
         else:
             plt.show()
+
+
+# Metrics
+def mase(y, y_hat, y_train) -> np.ndarray:
+    """ Mean Absolute Scale Error.
+    Parameters
+    ----------
+    y
+    y_hat
+    y_train
+
+    Returns
+    -------
+
+    """
+    # Naive in-sample Forecast
+    naive_y_hat = y_train[:-1]
+    naive_y = y_train[1:]
+
+    # Calculate MAE (in sample)
+    mae_in_sample = np.mean(np.abs(naive_y - naive_y_hat))
+
+    mae = np.mean(np.abs(y - y_hat))
+
+    return mae / mae_in_sample

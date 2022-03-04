@@ -4,7 +4,7 @@ from LSTM import *
 parser = argparse.ArgumentParser(
     description="Training LSTM model (Keras/Tensoeflow)")
 
-parser.add_argument('-e', '--epoch', default=20,
+parser.add_argument('-e', '--epoch', default=100,
                     help='number of epoch')
 
 parser.add_argument('-n', '--name', default='LSTM',

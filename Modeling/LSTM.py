@@ -7,8 +7,9 @@ import seaborn as sns
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import datetime
+import time
 
-from DataExploration.BitbrainsUtils import load_VM, plot_timeSeries
+from DataExploration.BitbrainsUtils import load_VM, plot_timeSeries, mase
 
 FIGURES_PATH = '../Figures/Modeling/LSTM'
 
@@ -218,6 +219,11 @@ class LstmModel:
         self.batch_size = batch_size
         self.name = name
 
+        # Model parameters
+        self.train_time = 0
+        self.inference_time = 0
+        self.model_size = 0.
+
         # Window
         self.window = WindowGenerator(
             input_width=self.input_width,
@@ -246,7 +252,6 @@ class LstmModel:
         self.model.add(tf.keras.layers.Dense(units=1))
 
     def compile_and_fit(self, patience=50):
-        print('Training:')
         # Early stopping
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                           patience=patience,
@@ -264,7 +269,7 @@ class LstmModel:
         if not os.access(checkpoint_filepath, os.W_OK):
             print('Cannot write to {}, please fix it.'.format(checkpoint_filepath))
             exit()
-        checkpoint_filepath = os.path.join(checkpoint_filepath, 'best-epoch={epoch:03d}-loss{val_loss:.2f}.hdf5')
+        checkpoint_filepath = os.path.join(checkpoint_filepath, 'best_model.hdf5')
         model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_filepath,
             save_weights_only=True,
@@ -283,12 +288,19 @@ class LstmModel:
                            metrics=tf.metrics.MeanAbsoluteError()
                            )
 
+        # Trace time for training
+        print('Beginning training')
+        t_start = time.perf_counter()
         history = self.model.fit(self.window.train[0],
                                  self.window.train[1],
                                  epochs=self.epoch,
                                  batch_size=self.batch_size,
                                  validation_data=(self.window.val[0], self.window.val[1]),
                                  callbacks=[early_stopping, tensorboard_callback, model_checkpoint_callback])
+
+        self.train_time = time.perf_counter() - t_start
+        self.model_size = os.stat(checkpoint_filepath).st_size
+        print("Training has completed:", f'{self.train_time:.2f} sec')
 
         # Loss History figure
         fig = plt.figure()
@@ -308,7 +320,10 @@ class LstmModel:
 
     def prediction(self, scaler):
         print('Inference:')
+        t_start = time.perf_counter()
         pred = self.model.predict(self.window.test_pred[0], batch_size=self.batch_size)
+        self.inference_time = time.perf_counter() - t_start
+        print("Inference time:", f'{self.inference_time:.2f} sec')
         # Convert to dataframe
         pred_df = pd.DataFrame(pred, columns=['CPU usage [MHZ]'])
         pred_df.index = self.test_df.index
@@ -322,7 +337,7 @@ class LstmModel:
         # Test set
         test_trf = scaler.inverse_transform(self.test_df)
         test_df_trf = pd.DataFrame(data=test_trf, columns=self.test_df.columns, index=self.test_df.index)
-        val_mape = self.model.evaluate(self.window.val[0])
+        val_mae = self.model.evaluate(self.window.val[0], self.window.val[1])
 
         # Figure forecast
         fig = plt.figure(dpi=200)
@@ -330,7 +345,7 @@ class LstmModel:
         self.df['CPU usage [MHZ]'].plot(label='actual', color='k')
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast')
         plt.ylabel('CPU usage [MHz]')
-        plt.title(f'Val MAPE: {val_mape[1]:.3f}')
+        plt.title(f'Val MAE: {val_mae[1]:.3f}')
         plt.grid()
         plt.legend()
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
@@ -345,7 +360,7 @@ class LstmModel:
         test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='k')
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast')
         plt.ylabel('CPU usage [MHz]')
-        plt.title(f'Val MAPE:{val_mape[1]:.3f}')
+        plt.title(f'Val MAE:{val_mae[1]:.3f}')
         plt.grid()
         plt.legend()
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
@@ -356,16 +371,22 @@ class LstmModel:
         return pred_df_trf
 
     def evaluation(self, pred, scaler):
-        performance_val = self.model.evaluate(self.window.val[0])
         test_trf = scaler.inverse_transform(self.test_df)
-        y_true = test_trf[:, 0]
+        train_trf = scaler.inverse_transform(self.train_df)
+        y_true = np.array(test_trf[:, 0])
         y_pred = np.array(pred['CPU usage [MHZ]'])
-        performance_test = {'MAE': np.array(tf.keras.metrics.mean_absolute_error(y_true, y_pred)),
-                            'MAPE': np.array(tf.keras.metrics.mean_absolute_percentage_error(y_true, y_pred)),
-                            'MSE': np.array(tf.keras.metrics.mean_squared_error(y_true, y_pred))}
+        y_train = np.array(train_trf[:, 0])
+        metrics_dic = {'MAE': np.array(tf.keras.metrics.mean_absolute_error(y_true, y_pred)),
+                       'MAPE': np.array(tf.keras.metrics.mean_absolute_percentage_error(y_true, y_pred)),
+                       'RMSE': np.sqrt(np.array(tf.keras.metrics.mean_squared_error(y_true, y_pred))),
+                       'MASE': mase(y_true, y_pred, y_train),
+                       'train_time [s]': self.train_time,
+                       'inference_time [s]': self.inference_time,
+                       'model_size [B]': self.model_size
+                       }
 
         # Save metrics
-        metrics = pd.DataFrame.from_dict(performance_test, orient='index')
+        metrics = pd.DataFrame.from_dict(metrics_dic, orient='index')
         try:
             filename = os.path.join('logs', self.name, 'metrics.txt')
             file = open(filename, 'wt')
@@ -373,4 +394,4 @@ class LstmModel:
             file.close()
         except:
             print("Unable to write to file")
-        return performance_val, performance_test
+        return metrics
