@@ -4,8 +4,8 @@ import pandas as pd
 
 # Constants
 LOGS_PATH = './logs'
-HP = 'neurons'
-HP_NAME = 'neurons'
+HP = 'labels'
+HP_NAME = 'output_length'
 FIGURES_PATH = '../Figures/Modeling/LSTM'
 if __name__ == "__main__":
     # List files
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     hp_df_list = []
     for idx, file in enumerate(hp_list):
         data = pd.read_csv(os.path.join(LOGS_PATH, hp_list[idx], 'metrics.txt'),
-                           names=[int(hp_list[idx].split('_')[1])], sep='   ', engine='python')
+                           names=[int(hp_list[idx].split('_')[1])], sep=',', index_col=0, engine='python')
         hp_df_list.append(data)
 
     # Create dataframe and sort
@@ -26,25 +26,50 @@ if __name__ == "__main__":
     hp_df.sort_index(axis=1, inplace=True)
 
     # Generate figures and save them
-    # MAE & MAE
+    # MAE, MAPE & RMSE
     fig = plt.figure(dpi=200)
-    hp_df.iloc[0:2, :].plot.bar(rot=0)
+    hp_df.iloc[1:4, :].plot.bar(rot=0)
     plt.xlabel('Metric')
     plt.title(f'Hyperparameter: {HP_NAME}')
     if not os.access(os.path.join(FIGURES_PATH, HP_NAME), os.F_OK):
         os.mkdir(os.path.join(FIGURES_PATH, HP_NAME))
-    save_path = os.path.join(FIGURES_PATH, HP_NAME, 'MAE_MAPE')
+    save_path = os.path.join(FIGURES_PATH, HP_NAME, 'MAE_MAPE_RMSE')
     plt.savefig(save_path, bbox_inches='tight')
     plt.close(fig)
-    # MSE
+
+    # Training time
     fig = plt.figure(dpi=200)
-    hp_df.iloc[2, :].plot.bar(rot=0)
+    hp_df.iloc[5, :].plot.bar(rot=0)
     plt.xlabel(f'{HP_NAME}')
-    plt.ylabel('MSE')
+    plt.ylabel('Training time [s]')
     plt.title(f'Hyperparameter: {HP_NAME}')
     if not os.access(os.path.join(FIGURES_PATH, HP_NAME), os.F_OK):
         os.mkdir(os.path.join(FIGURES_PATH, HP_NAME))
-    save_path = os.path.join(FIGURES_PATH, HP_NAME, 'MSE')
+    save_path = os.path.join(FIGURES_PATH, HP_NAME, 'train_time')
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close(fig)
+
+    # Inference time
+    fig = plt.figure(dpi=200)
+    hp_df.iloc[6, :].plot.bar(rot=0)
+    plt.xlabel(f'{HP_NAME}')
+    plt.ylabel('Inference time [s]')
+    plt.title(f'Hyperparameter: {HP_NAME}')
+    if not os.access(os.path.join(FIGURES_PATH, HP_NAME), os.F_OK):
+        os.mkdir(os.path.join(FIGURES_PATH, HP_NAME))
+    save_path = os.path.join(FIGURES_PATH, HP_NAME, 'infer_time')
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close(fig)
+
+    # Size of the mode
+    fig = plt.figure(dpi=200)
+    hp_df.iloc[7, :].plot.bar(rot=0)
+    plt.xlabel(f'{HP_NAME}')
+    plt.ylabel('Size of the model [B]')
+    plt.title(f'Hyperparameter: {HP_NAME}')
+    if not os.access(os.path.join(FIGURES_PATH, HP_NAME), os.F_OK):
+        os.mkdir(os.path.join(FIGURES_PATH, HP_NAME))
+    save_path = os.path.join(FIGURES_PATH, HP_NAME, 'model_size')
     plt.savefig(save_path, bbox_inches='tight')
     plt.close(fig)
 

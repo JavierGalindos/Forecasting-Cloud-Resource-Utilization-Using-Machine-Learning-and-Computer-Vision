@@ -88,4 +88,4 @@ if __name__ == "__main__":
     pred = lstm_model.prediction(scaler)
     # Evaluation
     print('Evaluation:')
-    performance_val, performance_test = lstm_model.evaluation(pred, scaler)
+    metrics = lstm_model.evaluation(pred, scaler)

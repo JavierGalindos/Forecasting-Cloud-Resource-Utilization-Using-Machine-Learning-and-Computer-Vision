@@ -5,9 +5,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import tensorflow as tf
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, LabelEncoder
 import datetime
 import time
+import math
 
 from DataExploration.BitbrainsUtils import load_VM, plot_timeSeries, mase
 
@@ -127,16 +128,26 @@ class WindowGenerator:
 
     def create_dataset(self, data):
         data = np.array(data, dtype=np.float32)
+        # Check if the length of series is multiple of label_width
+        if ((len(data) - self.input_width) % self.label_width) != 0:
+            # If not: cut the series to make it multiple
+            data = data[:math.floor((len(data) - self.input_width)/self.label_width)*self.label_width + self.input_width, :]
+        # Change for multiple features
         # Shape for tensorflow: (Samples, time steps, features)
-        input = np.empty((len(data) - self.input_width, self.input_width, data.shape[1]))
+        # input = np.empty((len(data) - self.input_width, self.input_width, data.shape[1]))
+        input = []
         # Need to change 3rd dimension if you want to predict more than 1 output at a time
-        labels = np.empty((len(data) - self.input_width, self.label_width, 1))
+        # labels = np.empty((len(data) - self.input_width, self.label_width, 1))
+        labels = []
         # for i in range(len(data) - self.input_width - 1):
-        for i in range(len(data) - self.input_width):
+        for i in range(0, len(data) - self.input_width, self.label_width):
             for j in range(data.shape[1]):
-                input[i, :, j] = data[i:(i + self.input_width), j]
-            # 0 is the column to predict: 'CPU Usage [MHZ]'
-            labels[i, :, 0] = data[(i + self.input_width):(i + self.input_width + self.label_width), 0]
+                # input[i, :, j] = data[i:(i + self.input_width), j]
+                input.append(data[i:(i + self.input_width), j])
+                # labels[i, :, 0] = data[(i + self.input_width):(i + self.input_width + self.label_width), 0]
+                labels.append(data[(i + self.input_width):(i + self.input_width + self.label_width), j])
+        input = np.array(input).reshape((-1, self.input_width, data.shape[1]))
+        labels = np.array(labels).reshape((-1, self.label_width, data.shape[1]))
         return input, labels
 
     @property
@@ -165,33 +176,6 @@ class WindowGenerator:
             # And cache it for next time
             self._example = result
         return result
-
-
-def add_daily_info(df: pd.DataFrame) -> pd.DataFrame:
-    timestamp_s = df.index.map(pd.Timestamp.timestamp)
-
-    day = 60 * 24 / 5
-    df['Day sin'] = np.sin(timestamp_s * (2 * np.pi / day))
-    df['Day cos'] = np.cos(timestamp_s * (2 * np.pi / day))
-    df['Hour'] = np.array(df.index.floor(freq='H').hour)
-    return df
-
-
-def split_data(df: pd.DataFrame, training: float = 0.7, validation: float = 0.2, test: float = 0.1):
-    n = len(df)
-    df_copy = df.copy()
-    train_df = df_copy[0:int(n * training)]
-    val_df = df_copy[int(n * training):int(n * (training + validation))]
-    test_df = df_copy[int(n * (training + validation)):]
-    return train_df, val_df, test_df
-
-
-def data_transformation(scaler, train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame):
-    # Must return a Pandas DataFrame
-    train_df.loc[:, train_df.columns] = scaler.fit_transform(train_df.loc[:, train_df.columns])
-    val_df.loc[:, val_df.columns] = scaler.transform(val_df.loc[:, val_df.columns])
-    test_df.loc[:, test_df.columns] = scaler.transform(test_df.loc[:, test_df.columns])
-    return train_df, val_df, test_df
 
 
 class LstmModel:
@@ -247,9 +231,14 @@ class LstmModel:
 
             self.model.add(tf.keras.layers.LSTM(self.units, dropout=self.dropout, return_sequences=False))
 
-        # Shape => [batch, time, features]
-        # self.model.add(tf.keras.layers.Dense(units=1, activation='tanh'))
-        self.model.add(tf.keras.layers.Dense(units=1))
+        if self.label_width == 1:
+            # Shape => [batch, time, features]
+            self.model.add(tf.keras.layers.Dense(units=1))
+        else:
+            # Shape => [batch, 1, out_steps*features]
+            self.model.add(tf.keras.layers.Dense(units=self.label_width, kernel_initializer=tf.initializers.zeros()))
+            # Shape => [batch, out_steps, features]
+            self.model.add(tf.keras.layers.Reshape([self.label_width, 1]))
 
     def compile_and_fit(self, patience=50):
         # Early stopping
@@ -324,6 +313,11 @@ class LstmModel:
         pred = self.model.predict(self.window.test_pred[0], batch_size=self.batch_size)
         self.inference_time = time.perf_counter() - t_start
         print("Inference time:", f'{self.inference_time:.2f} sec')
+        # Reshape
+        pred = np.reshape(pred, (-1, 1))
+        # Cut test_df
+        self.test_df = self.test_df.iloc[:pred.shape[0], :]
+
         # Convert to dataframe
         pred_df = pd.DataFrame(pred, columns=['CPU usage [MHZ]'])
         pred_df.index = self.test_df.index
@@ -340,10 +334,20 @@ class LstmModel:
         val_mae = self.model.evaluate(self.window.val[0], self.window.val[1])
 
         # Figure forecast
+        # Define default kwargs
+        defaultKwargs = {'marker': 'o',
+                         'linestyle': '',
+                         'alpha': 0.3,
+                         'markersize': 2}
+        kwargs_forecast = {'marker': 'o',
+                           'linestyle': '',
+                           'alpha': 0.5,
+                           'markersize': 2,
+                           'color': 'tab:orange'}
         fig = plt.figure(dpi=200)
         plt.grid()
-        self.df['CPU usage [MHZ]'].plot(label='actual', color='k')
-        pred_df_trf['CPU usage [MHZ]'].plot(label='forecast')
+        self.df['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
+        pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
         plt.ylabel('CPU usage [MHz]')
         plt.title(f'Val MAE: {val_mae[1]:.3f}')
         plt.grid()
@@ -357,8 +361,8 @@ class LstmModel:
         # Figure zoom
         fig = plt.figure(dpi=200)
         plt.grid()
-        test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='k')
-        pred_df_trf['CPU usage [MHZ]'].plot(label='forecast')
+        test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
+        pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
         plt.ylabel('CPU usage [MHz]')
         plt.title(f'Val MAE:{val_mae[1]:.3f}')
         plt.grid()
@@ -389,9 +393,37 @@ class LstmModel:
         metrics = pd.DataFrame.from_dict(metrics_dic, orient='index')
         try:
             filename = os.path.join('logs', self.name, 'metrics.txt')
-            file = open(filename, 'wt')
-            file.write(str(metrics))
-            file.close()
+            metrics.to_csv(filename)
+            # file = open(filename, 'wt')
+            # file.write(str(metrics))
+            # file.close()
         except:
             print("Unable to write to file")
         return metrics
+
+
+def add_daily_info(df: pd.DataFrame) -> pd.DataFrame:
+    timestamp_s = df.index.map(pd.Timestamp.timestamp)
+
+    day = 60 * 24 / 5
+    df['Day sin'] = np.sin(timestamp_s * (2 * np.pi / day))
+    df['Day cos'] = np.cos(timestamp_s * (2 * np.pi / day))
+    df['Hour'] = np.array(df.index.floor(freq='H').hour)
+    return df
+
+
+def split_data(df: pd.DataFrame, training: float = 0.7, validation: float = 0.2, test: float = 0.1):
+    n = len(df)
+    df_copy = df.copy()
+    train_df = df_copy[0:int(n * training)]
+    val_df = df_copy[int(n * training):int(n * (training + validation))]
+    test_df = df_copy[int(n * (training + validation)):]
+    return train_df, val_df, test_df
+
+
+def data_transformation(scaler, train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame):
+    # Must return a Pandas DataFrame
+    train_df.loc[:, train_df.columns] = scaler.fit_transform(train_df.loc[:, train_df.columns])
+    val_df.loc[:, val_df.columns] = scaler.transform(val_df.loc[:, val_df.columns])
+    test_df.loc[:, test_df.columns] = scaler.transform(test_df.loc[:, test_df.columns])
+    return train_df, val_df, test_df
