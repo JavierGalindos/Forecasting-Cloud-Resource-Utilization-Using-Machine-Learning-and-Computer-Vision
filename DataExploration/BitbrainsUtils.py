@@ -5,6 +5,7 @@ import pandas as pd
 import random
 from typing import List
 import seaborn as sns
+from sklearn.preprocessing import LabelEncoder
 
 ''' Data constants'''
 DATA_PATH = r'../Datasets/fastStorage/2013-8'
@@ -247,3 +248,89 @@ def mase(y, y_hat, y_train) -> np.ndarray:
     mae = np.mean(np.abs(y - y_hat))
 
     return mae / mae_in_sample
+
+
+def split_data(df: pd.DataFrame, training: float = 0.7, validation: float = 0.2, test: float = 0.1):
+    """ Split the dataset in train, validation and test sets
+
+    Parameters
+    ----------
+    df
+    training
+    validation
+    test
+
+    Returns
+    -------
+
+    """
+    n = len(df)
+    df_copy = df.copy()
+    train_df = df_copy[0:int(n * training)]
+    val_df = df_copy[int(n * training):int(n * (training + validation))]
+    test_df = df_copy[int(n * (training + validation)):]
+    return train_df, val_df, test_df
+
+
+def data_transformation(scaler, train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame):
+    """ Performs data pre-processing according to scaler
+
+    Parameters
+    ----------
+    scaler
+    train_df
+    val_df
+    test_df
+
+    Returns
+    -------
+
+    """
+    # Must return a Pandas DataFrame
+    train_df.loc[:, train_df.columns] = scaler.fit_transform(train_df.loc[:, train_df.columns])
+    val_df.loc[:, val_df.columns] = scaler.transform(val_df.loc[:, val_df.columns])
+    test_df.loc[:, test_df.columns] = scaler.transform(test_df.loc[:, test_df.columns])
+    return train_df, val_df, test_df
+
+
+def reg2class(df, n_classes):
+    """ Regression to Classification problem
+        Return the labels (0 to num_classes) & the mean per class
+    Parameters
+    ----------
+    df
+    n_classes
+
+    Returns
+    -------
+
+    """
+    label_encoder = LabelEncoder()
+    # Create n_classes in the df
+    classes = pd.cut(df, n_classes, retbins=True)
+    # Class labels
+    labels = label_encoder.fit_transform(classes[0])
+    # Return also numeric value per class
+    boundaries = classes[1]
+    mean_class = []
+    for i in range(len(boundaries) - 1):
+        mean_class.append(0.5 * (boundaries[i] + boundaries[i + 1]))
+    mean_class = np.array(mean_class)
+    # Return only classes present in the dataset
+    mean_class = mean_class[np.array(pd.cut(df, bins=n_classes).value_counts(sort=False)) != 0]
+    return labels, mean_class
+
+
+def class2num(y, mean_class):
+    """ Convert classes to numeric output
+
+    Parameters
+    ----------
+    y
+    mean_class
+
+    Returns
+    -------
+
+    """
+    return mean_class[y]

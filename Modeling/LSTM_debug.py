@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # LSTM model
     lstm_model = LstmModel(input_width=10, label_width=9, df=df, train_df=train_df, val_df=val_df, test_df=test_df,
-                           epoch=200, units=20, layers=1, dropout=0, name='Classification_9_200', classification=True)
+                           epoch=100, units=20, layers=1, dropout=0, name='labels_9', classification=False)
 
     # Training
     print('Training:')

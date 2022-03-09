@@ -10,7 +10,7 @@ import datetime
 import time
 import math
 
-from DataExploration.BitbrainsUtils import load_VM, plot_timeSeries, mase
+from DataExploration.BitbrainsUtils import load_VM, plot_timeSeries, mase, split_data, data_transformation, reg2class, class2num
 
 FIGURES_PATH = '../Figures/Modeling/LSTM'
 
@@ -163,7 +163,8 @@ class LstmModel:
         input = np.array(input).reshape((-1, self.input_width, data.shape[1]))
         # Need to change 3rd dimension if you want to predict more than 1 output at a time
         labels = np.array(labels).reshape((-1, self.label_width, 1))
-        labels = tf.keras.utils.to_categorical(labels, num_classes=self.num_classes)
+        if self.classification is True:
+            labels = tf.keras.utils.to_categorical(labels, num_classes=self.num_classes)
         return input, labels
 
     def compile_and_fit(self, patience=100):
@@ -254,11 +255,15 @@ class LstmModel:
         pred = self.model.predict(self.test_pred[0], batch_size=self.batch_size)
         self.inference_time = time.perf_counter() - t_start
         print("Inference time:", f'{self.inference_time:.2f} sec')
-        # Reshape
-        pred = np.argmax(pred, axis=2)
-        pred = np.reshape(pred, (-1, 1))
+
         if self.classification is True:
+            pred = np.argmax(pred, axis=2)
+            pred = np.reshape(pred, (-1, 1))
             pred = class2num(pred, self.mean_class)
+        else:
+            # Reshape
+            pred = np.reshape(pred, (-1, 1))
+
         # Cut test_df
         self.test_df = self.test_df.iloc[:pred.shape[0], :]
 
@@ -357,91 +362,6 @@ def add_daily_info(df: pd.DataFrame) -> pd.DataFrame:
     df['Hour'] = np.array(df.index.floor(freq='H').hour)
     return df
 
-
-def split_data(df: pd.DataFrame, training: float = 0.7, validation: float = 0.2, test: float = 0.1):
-    """ Split the dataset in train, validation and test sets
-
-    Parameters
-    ----------
-    df
-    training
-    validation
-    test
-
-    Returns
-    -------
-
-    """
-    n = len(df)
-    df_copy = df.copy()
-    train_df = df_copy[0:int(n * training)]
-    val_df = df_copy[int(n * training):int(n * (training + validation))]
-    test_df = df_copy[int(n * (training + validation)):]
-    return train_df, val_df, test_df
-
-
-def data_transformation(scaler, train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame):
-    """ Performs data pre-processing according to scaler
-
-    Parameters
-    ----------
-    scaler
-    train_df
-    val_df
-    test_df
-
-    Returns
-    -------
-
-    """
-    # Must return a Pandas DataFrame
-    train_df.loc[:, train_df.columns] = scaler.fit_transform(train_df.loc[:, train_df.columns])
-    val_df.loc[:, val_df.columns] = scaler.transform(val_df.loc[:, val_df.columns])
-    test_df.loc[:, test_df.columns] = scaler.transform(test_df.loc[:, test_df.columns])
-    return train_df, val_df, test_df
-
-
-def reg2class(df, n_classes):
-    """ Regression to Classification problem
-        Return the labels (0 to num_classes) & the mean per class
-    Parameters
-    ----------
-    df
-    n_classes
-
-    Returns
-    -------
-
-    """
-    label_encoder = LabelEncoder()
-    # Create n_classes in the df
-    classes = pd.cut(df, n_classes, retbins=True)
-    # Class labels
-    labels = label_encoder.fit_transform(classes[0])
-    # Return also numeric value per class
-    boundaries = classes[1]
-    mean_class = []
-    for i in range(len(boundaries) - 1):
-        mean_class.append(0.5 * (boundaries[i] + boundaries[i + 1]))
-    mean_class = np.array(mean_class)
-    # Return only classes present in the dataset
-    mean_class = mean_class[np.array(pd.cut(df, bins=n_classes).value_counts(sort=False)) != 0]
-    return labels, mean_class
-
-
-def class2num(y, mean_class):
-    """ Convert classes to numeric output
-
-    Parameters
-    ----------
-    y
-    mean_class
-
-    Returns
-    -------
-
-    """
-    return mean_class[y]
 
 # Do not need it anymore
 # class WindowGenerator:
