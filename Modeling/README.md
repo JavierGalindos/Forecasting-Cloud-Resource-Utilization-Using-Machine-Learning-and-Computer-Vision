@@ -32,7 +32,7 @@ ssh -N -L 6006:localhost:6006 javier.galindos@machine-learning.imdea
 ### Tune hyper-parameters
 Modify the shell script [tune_hp.sh](tune_hp.sh) to tune desired hyperparameters
 ```
-chmod +x demo.sh
+chmod +x tune_hp.sh
 ./tune_hp.sh
 ```
 

@@ -4,8 +4,8 @@ import pandas as pd
 
 # Constants
 LOGS_PATH = './logs'
-HP = 'labels'
-HP_NAME = 'output_length'
+HP = 'pre'
+HP_NAME = 'pre-processing'
 FIGURES_PATH = '../Figures/Modeling/LSTM'
 if __name__ == "__main__":
     # List files
@@ -17,8 +17,11 @@ if __name__ == "__main__":
     # List files with specific hyper-parameters
     hp_df_list = []
     for idx, file in enumerate(hp_list):
+        # Remove int() if parameters are not numeric
         data = pd.read_csv(os.path.join(LOGS_PATH, hp_list[idx], 'metrics.txt'),
                            names=[int(hp_list[idx].split('_')[1])], sep=',', index_col=0, engine='python')
+        # data = pd.read_csv(os.path.join(LOGS_PATH, hp_list[idx], 'metrics.txt'),
+        #                     names=[hp_list[idx].split('_')[1]], sep=',', index_col=0, engine='python')
         hp_df_list.append(data)
 
     # Create dataframe and sort

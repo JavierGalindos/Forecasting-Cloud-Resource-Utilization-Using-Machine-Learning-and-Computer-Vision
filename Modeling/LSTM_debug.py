@@ -16,23 +16,12 @@ if __name__ == "__main__":
     train_df, val_df, test_df = data_transformation(scaler, train_df, val_df, test_df)
 
     # LSTM model
-    lstm_model = LstmModel(input_width=10,
-                           label_width=3,
-                           name='LSTM',
-                           df=df,
-                           train_df=train_df,
-                           val_df=val_df,
-                           test_df=test_df,
-                           epoch=100,
-                           units=20,
-                           layers=1,
-                           dropout=0,
-                           )
+    lstm_model = LstmModel(input_width=10, label_width=9, df=df, train_df=train_df, val_df=val_df, test_df=test_df,
+                           epoch=200, units=20, layers=1, dropout=0, name='Classification_9_200', classification=True)
 
-    train = lstm_model.window.train
     # Training
     print('Training:')
-    history = lstm_model.compile_and_fit(patience=50)
+    history = lstm_model.compile_and_fit(patience=100)
     # Prediction
     print('Prediction:')
     pred = lstm_model.prediction(scaler)

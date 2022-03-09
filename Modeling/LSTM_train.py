@@ -2,7 +2,7 @@ import argparse
 from LSTM import *
 
 parser = argparse.ArgumentParser(
-    description="Training LSTM model (Keras/Tensoeflow)")
+    description="Training LSTM model (Keras/TensorFlow)")
 
 parser.add_argument('-e', '--epoch', default=100,
                     help='number of epoch')
@@ -28,6 +28,9 @@ parser.add_argument('--dropout', default=0,
 parser.add_argument('--label', default=1,
                     help='label_length')
 
+parser.add_argument('--classification', default=False,
+                    help='classification problem')
+
 args = parser.parse_args()
 
 EPOCH = int(args.epoch)
@@ -37,6 +40,7 @@ LABEL_LENGTH = int(args.label)
 HIDDEN_DIM = int(args.dim)
 N_LAYERS = int(args.layers)
 DROPOUT = float(args.dropout)
+CLASSIFICATION = args.classification
 figure_path = args.figure_path
 
 # Check figure path
@@ -67,22 +71,13 @@ if __name__ == "__main__":
     train_df, val_df, test_df = data_transformation(scaler, train_df, val_df, test_df)
 
     # LSTM model
-    lstm_model = LstmModel(input_width=INPUT_LENGTH,
-                           label_width=LABEL_LENGTH,
-                           name=NAME,
-                           df=df,
-                           train_df=train_df,
-                           val_df=val_df,
-                           test_df=test_df,
-                           epoch=EPOCH,
-                           units=HIDDEN_DIM,
-                           layers=N_LAYERS,
-                           dropout=DROPOUT,
-                           )
+    lstm_model = LstmModel(input_width=INPUT_LENGTH, label_width=LABEL_LENGTH, df=df, train_df=train_df, val_df=val_df,
+                           test_df=test_df, epoch=EPOCH, units=HIDDEN_DIM, layers=N_LAYERS, dropout=DROPOUT, name=NAME,
+                           classification=CLASSIFICATION)
 
     # Training
     print('Training:')
-    history = lstm_model.compile_and_fit(patience=50)
+    history = lstm_model.compile_and_fit(patience=80)
     # Prediction
     print('Prediction:')
     pred = lstm_model.prediction(scaler)
