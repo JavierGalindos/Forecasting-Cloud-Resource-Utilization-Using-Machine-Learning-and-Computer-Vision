@@ -7,10 +7,10 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-e', '--epoch', default=100,
                     help='number of epoch')
 
-parser.add_argument('-n', '--name', default='LSTM',
+parser.add_argument('-n', '--name', default='541/LSTM',
                     help='name of the model')
 
-parser.add_argument('-s', '--figure_path', default="LSTM",
+parser.add_argument('-s', '--figure_path', default="541",
                     help='Destination for figures to be saved at')
 
 parser.add_argument('-i', '--input_length', default=50,
@@ -58,7 +58,7 @@ FIGURES_PATH = figures_path
 if __name__ == "__main__":
     print('Pre-processing')
     # Load data
-    VM = load_VM('917.csv')
+    VM = load_VM('541.csv') # 917.csv
     # Make it univariate
     df = VM[['CPU usage [MHZ]']]
 

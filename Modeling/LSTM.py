@@ -345,9 +345,6 @@ class LstmModel:
         try:
             filename = os.path.join('logs', self.name, 'metrics.txt')
             metrics.to_csv(filename)
-            # file = open(filename, 'wt')
-            # file.write(str(metrics))
-            # file.close()
         except:
             print("Unable to write to file")
         return metrics
