@@ -125,7 +125,7 @@ class ConvLSTMModel:
         data = np.array(data, dtype=np.float32)
         # Check if the length of series is multiple of label_width
         if ((len(data) - self.input_width) % self.label_width) != 0:
-            # If not: cut the series to make it multiple
+            # If not: trim the series to make it multiple
             data = data[
                    :math.floor((len(data) - self.input_width) / self.label_width) * self.label_width + self.input_width,
                    :]
@@ -183,7 +183,7 @@ class ConvLSTMModel:
         data = np.array(data, dtype=np.float32)
         # Check if the length of series is multiple of label_width
         if ((len(data) - self.input_width) % self.label_width) != 0:
-            # If not: cut the series to make it multiple
+            # If not: trim the series to make it multiple
             data = data[
                    :math.floor((len(data) - self.input_width) / self.label_width) * self.label_width + self.input_width,
                    :]
@@ -230,9 +230,8 @@ class ConvLSTMModel:
             return_sequences=True,
             activation="relu",
             data_format="channels_last",
-            input_shape=(1, 64, 64, 1),
         )(inp)
-        x = tf.keras.layers.BatchNormalization(input_shape=(1, 64, 64, 64),)(x)
+        x = tf.keras.layers.BatchNormalization()(x)
         x = tf.keras.layers.ConvLSTM2D(
             filters=64,
             kernel_size=(3, 3),
@@ -240,7 +239,6 @@ class ConvLSTMModel:
             return_sequences=True,
             activation="relu",
             data_format="channels_last",
-            input_shape=(1, 64, 64, 64),
         )(x)
         x = tf.keras.layers.BatchNormalization(input_shape=(1, 64, 64, 64),)(x)
         x = tf.keras.layers.ConvLSTM2D(
@@ -250,10 +248,9 @@ class ConvLSTMModel:
             return_sequences=True,
             activation="relu",
             data_format="channels_last",
-            input_shape=(1, 64, 64, 64),
         )(x)
         x = tf.keras.layers.Conv3D(
-            filters=1, kernel_size=(3, 3, 3), activation="sigmoid", padding="same", input_shape=(1, 64, 64, 64),
+            filters=1, kernel_size=(3, 3, 3), activation="sigmoid", padding="same",
         )(x)
 
         # Next, we will build the complete model and compile it.
