@@ -3,9 +3,9 @@ from sklearn.model_selection import TimeSeriesSplit
 
 # Hyperparameters
 EPOCH = 100
-NAME = 'LSTM_CV9'
-INPUT_LENGTH = 10
-LABEL_LENGTH = 9
+NAME = '549/CV6'
+INPUT_LENGTH = 1
+LABEL_LENGTH = 6
 HIDDEN_DIM = 20
 N_LAYERS = 1
 DROPOUT = 0
@@ -13,8 +13,8 @@ CLASSIFICATION = False
 
 if __name__ == "__main__":
     # Load data
-    VM = load_VM('917.csv')
-    # VM = load_VM('599.csv')
+    # VM = load_VM('541.csv')
+    VM = load_VM('599.csv')
     # Make it univariate
     df = VM[['CPU usage [MHZ]']]
 

@@ -3,7 +3,7 @@ from LSTM import *
 if __name__ == "__main__":
     print('Pre-processing')
     # Load data
-    VM = load_VM('917.csv')
+    VM = load_VM('599.csv')
     # Make it univariate
     df = VM[['CPU usage [MHZ]']]
 
@@ -12,12 +12,12 @@ if __name__ == "__main__":
     train_df, val_df, test_df = split_data(df)
 
     # Normalizing
-    scaler = MinMaxScaler()
+    scaler = StandardScaler()
     train_df, val_df, test_df = data_transformation(scaler, train_df, val_df, test_df)
 
     # LSTM model
-    lstm_model = LstmModel(input_width=10, label_width=9, df=df, train_df=train_df, val_df=val_df, test_df=test_df,
-                           epoch=100, units=20, layers=1, dropout=0, name='labels_9', classification=False)
+    lstm_model = LstmModel(input_width=50, label_width=6, df=df, train_df=train_df, val_df=val_df, test_df=test_df,
+                           epoch=100, units=20, layers=1, dropout=0, name='549/pre_StandardScaler', classification=False)
 
     # Training
     print('Training:')

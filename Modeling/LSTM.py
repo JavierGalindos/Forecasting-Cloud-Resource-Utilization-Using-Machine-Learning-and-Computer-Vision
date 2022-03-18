@@ -64,6 +64,7 @@ class LstmModel:
             labels_data, self.mean_class = reg2class(self.df['CPU usage [MHZ]'], n_classes=100)
             self.num_classes = max(labels_data) + 1
             self.train_labels, self.val_labels, self.test_labels = split_data(pd.DataFrame(labels_data))
+
         # Model
         self.model = tf.keras.models.Sequential()
         if self.layer == 1:
@@ -133,7 +134,9 @@ class LstmModel:
         Parameters
         ----------
         data
+            Pandas DataFrame to create
         labels
+            For classification problem only
 
         Returns
         -------
@@ -143,8 +146,9 @@ class LstmModel:
         if self.classification is True:
             labels_data = np.array(labels)
             labels_data = np.reshape(labels_data, (-1, 1))
-        data = np.array(data, dtype=np.float32)
-        if self.classification is False:
+            data = np.array(data, dtype=np.float32)
+        else:
+            data = np.array(data, dtype=np.float32)
             labels_data = data
         # Check if the length of series is multiple of label_width
         if ((len(data) - self.input_width) % self.label_width) != 0:
@@ -171,7 +175,8 @@ class LstmModel:
         # Early stopping
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                           patience=patience,
-                                                          mode='min')
+                                                          mode='min',
+                                                          restore_best_weights=True)
 
         # Tensorboard
         # log_dir = f'logs/fit/{self.name}' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -199,7 +204,7 @@ class LstmModel:
                 filepath=checkpoint_filepath,
                 save_weights_only=True,
                 monitor='val_categorical_accuracy',
-                mode='min',
+                mode='max',
                 save_best_only=True)
 
         print(f'Input shape (batch, time, features): {self.train[0].shape}')
