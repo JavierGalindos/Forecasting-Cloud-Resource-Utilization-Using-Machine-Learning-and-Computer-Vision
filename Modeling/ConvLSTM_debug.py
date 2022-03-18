@@ -26,7 +26,7 @@ if __name__ == '__main__':
                                    val_df=val_df,
                                    test_df=test_df,
                                    epoch=50,
-                                   batch_size=5
+                                   batch_size=8
                                    )
 
     # Training

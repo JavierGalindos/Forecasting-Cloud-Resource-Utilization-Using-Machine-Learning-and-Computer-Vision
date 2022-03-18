@@ -139,7 +139,7 @@ class ConvLSTMModel:
             # Input
             fig = full_frame(figsize, dpi)
             plt.ylim(0, 1)  # set y-axis limits
-            plt.plot(data[i:(i + self.input_width), :], '-', color='black')
+            plt.plot(data[i:(i + self.input_width), :], ',', color='black')
             # Save images temporally in the buffer
             buf = io.BytesIO()
             plt.savefig(buf, format="png")
@@ -195,7 +195,7 @@ class ConvLSTMModel:
             # Input images (shift label with between samples)
             fig = full_frame(figsize, dpi)
             plt.ylim(0, 1)  # set y-axis limits
-            plt.plot(data[i:(i + self.input_width), :], '-', color='black')
+            plt.plot(data[i:(i + self.input_width), :], ',', color='black')
             image_path_save = os.path.join(image_path, 'input')
             # Create the folder whether not exists
             if not os.path.exists(image_path_save):
@@ -206,7 +206,7 @@ class ConvLSTMModel:
             # Label images (shift label with between samples)
             fig = full_frame(figsize, dpi)
             plt.ylim(0, 1)  # set y-axis limits
-            plt.plot(data[(i + self.label_width):(i + self.input_width + self.label_width), :], '-', color='black')
+            plt.plot(data[(i + self.label_width):(i + self.input_width + self.label_width), :], ',', color='black')
             image_path_save = os.path.join(image_path, 'labels')
             # Create the folder whether not exists
             if not os.path.exists(image_path_save):
@@ -231,7 +231,9 @@ class ConvLSTMModel:
             activation="relu",
             data_format="channels_last",
         )(inp)
+        x = tf.keras.layers.Reshape([64, 64, 64])(x)
         x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Reshape([1, 64, 64, 64])(x)
         x = tf.keras.layers.ConvLSTM2D(
             filters=64,
             kernel_size=(3, 3),
@@ -240,7 +242,9 @@ class ConvLSTMModel:
             activation="relu",
             data_format="channels_last",
         )(x)
-        x = tf.keras.layers.BatchNormalization(input_shape=(1, 64, 64, 64),)(x)
+        x = tf.keras.layers.Reshape([64, 64, 64])(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Reshape([1, 64, 64, 64])(x)
         x = tf.keras.layers.ConvLSTM2D(
             filters=64,
             kernel_size=(1, 1),
@@ -263,7 +267,7 @@ class ConvLSTMModel:
     def compile_and_fit(self):
         # Early stopping
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                          patience=10,
+                                                          patience=15,
                                                           mode='min',
                                                           restore_best_weights=True)
 
@@ -303,7 +307,7 @@ class ConvLSTMModel:
             print('Cannot write to {}, please fix it.'.format(model_filepath))
             exit()
         # Get the loss and accuracy from model_evaluation_history.
-        model_evaluation_loss, model_evaluation_accuracy = history
+        # model_evaluation_loss, model_evaluation_accuracy = history
         # Define the string date format.
         # Get the current Date and Time in a DateTime Object.
         # Convert the DateTime object to string according to the style mentioned in date_time_format string.
@@ -311,7 +315,8 @@ class ConvLSTMModel:
         current_date_time_dt = dt.datetime.now()
         current_date_time_string = dt.datetime.strftime(current_date_time_dt, date_time_format)
         # Define a useful name for our model to make it easy for us while navigating through multiple saved models.
-        model_file_name = f'ConvLSTM_model_{current_date_time_string}_Loss_{model_evaluation_loss}_Accuracy_{model_evaluation_accuracy}.hdf5'
+        # model_file_name = f'ConvLSTM_model_{current_date_time_string}_Loss_{model_evaluation_loss}_Accuracy_{model_evaluation_accuracy}.hdf5'
+        model_file_name = f'ConvLSTM_model_{current_date_time_string}.hdf5'
         model_filepath = os.path.join(model_filepath, model_file_name)
         # Save your Model.
         self.model.save(model_filepath)
@@ -332,6 +337,40 @@ class ConvLSTMModel:
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
         return history
+
+    def prediction(self):
+        print('Inference:')
+        t_start = time.perf_counter()
+        pred = self.model.predict(self.test_pred[0], batch_size=self.batch_size)
+        self.inference_time = time.perf_counter() - t_start
+        print("Inference time:", f'{self.inference_time:.2f} sec')
+
+        # Ground truth
+        gt = self.test[1]
+        # Construct a figure for the original and new frames.
+        fig, axes = plt.subplots(2, 10, figsize=(20, 4))
+
+        # Plot the original frames.
+        for idx, ax in enumerate(axes[0]):
+            ax.imshow(np.squeeze(gt[idx]), cmap="gray")
+            ax.set_title(f"Sample {idx}")
+            ax.axis("off")
+
+        # Plot the new frames.
+        for idx, ax in enumerate(axes[1]):
+            ax.imshow(np.squeeze(pred[idx]), cmap="gray")
+            ax.set_title(f"Sample {idx}")
+            ax.axis("off")
+
+        # Display the figure.
+        # plt.show()
+        if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
+            os.mkdir(os.path.join(FIGURES_PATH, self.name))
+        save_path = os.path.join(FIGURES_PATH, self.name, 'image_example')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+        return pred
 
 
 def full_frame(figsize=(8.0, 8.0), dpi=8):
