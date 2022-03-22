@@ -11,6 +11,7 @@ import time
 import math
 import io
 import cv2
+import random
 
 from DataExploration.BitbrainsUtils import load_VM, plot_timeSeries, mase, split_data, data_transformation, reg2class, \
     class2num
@@ -35,6 +36,12 @@ if not os.access(DATASET_PATH, os.W_OK):
 else:
     print('figures saved to {}'.format(DATASET_PATH))
 
+# Set the seed for reproducibility
+seed_constant = 42
+np.random.seed(seed_constant)
+random.seed(seed_constant)
+tf.random.set_seed(seed_constant)
+
 # Global figure size and resolution. Gives image of size 64x64
 dpi = 8
 figsize = (8, 8)
@@ -44,9 +51,10 @@ class ConvLSTMModel:
     # TODO: Clean useless hyperameters and classification code
     def __init__(self, input_width, label_width, df,
                  train_df, val_df, test_df,
-                 epoch=100, units=20, layers=1,
-                 dropout=0, batch_size=16,
-                 name='ConvLSTM', classification=False,
+                 epoch=100, batch_size=16,
+                 n_frames=1,
+                 name='ConvLSTM',
+                 model_path=None,
                  ):
         # Store the raw data.
         self.df = df
@@ -63,12 +71,9 @@ class ConvLSTMModel:
 
         # Hyper parameters.
         self.epoch = epoch
-        self.units = units
-        self.layer = layers
-        self.dropout = dropout
         self.batch_size = batch_size
         self.name = name
-        self.classification = classification
+        self.n_frames = n_frames
 
         # Model parameters
         self.train_time = 0
@@ -77,34 +82,22 @@ class ConvLSTMModel:
         self.mean_class = None
         self.num_classes = 0
 
-        # Classification pre-processing
-        if self.classification is True:
-            labels_data, self.mean_class = reg2class(self.df['CPU usage [MHZ]'], n_classes=100)
-            self.num_classes = max(labels_data) + 1
-            self.train_labels, self.val_labels, self.test_labels = split_data(pd.DataFrame(labels_data))
-
-        self.model = self.get_model()
+        if model_path is not None:
+            self.model = tf.keras.models.load_model(model_path)
+        else:
+            self.model = self.get_model()
 
     @property
     def train(self):
-        if self.classification is True:
-            return self.create_dataset(self.train_df, self.train_labels)
-        else:
-            return self.create_dataset(self.train_df)
+        return self.create_dataset(self.train_df)
 
     @property
     def val(self):
-        if self.classification is True:
-            return self.create_dataset(self.val_df, self.val_labels)
-        else:
-            return self.create_dataset(self.val_df)
+        return self.create_dataset(self.val_df)
 
     @property
     def test(self):
-        if self.classification is True:
-            return self.create_dataset(self.test_df, self.test_labels)
-        else:
-            return self.create_dataset(self.test_df)
+        return self.create_dataset(self.test_df)
 
     @property
     def test_pred(self):
@@ -121,13 +114,48 @@ class ConvLSTMModel:
             self._example = result
         return result
 
+    @staticmethod
+    def create_image_numpy(data, width, height=100):
+        data = np.squeeze(data)
+        # Get the height of each column (0-100)
+        level = np.round(data * 100)
+        # Invert y-axis from bottom to top
+        level = 100 - level - 1
+        # Create the image
+        img = np.zeros((height, width))
+        # Fill with ones the corresponding level
+        for i in range(width):
+            img[int(level[i]), i] = 255
+        return img
+
+    @staticmethod
+    def create_image_matplotlib(data):
+        global figsize, dpi
+        # Input
+        fig = full_frame(figsize, dpi)
+        plt.ylim(0, 1)  # set y-axis limits
+        plt.plot(data, ',', color='black')
+        # Save images temporally in the buffer
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png")
+        buf.seek(0)
+        # Get image from buffer
+        img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
+        buf.close()
+        plt.close(fig)
+        # Read with OpenCV to get numpy array
+        img = cv2.imdecode(img_arr, cv2.IMREAD_GRAYSCALE)
+        return img
+
     def create_dataset(self, data):
         data = np.array(data, dtype=np.float32)
         # Check if the length of series is multiple of label_width
-        if ((len(data) - self.input_width) % self.label_width) != 0:
+        if ((len(data) - (self.input_width + self.label_width * (self.n_frames - 1))) % self.label_width) != 0:
             # If not: trim the series to make it multiple
             data = data[
-                   :math.floor((len(data) - self.input_width) / self.label_width) * self.label_width + self.input_width,
+                   :math.floor(
+                       (len(data) - (self.input_width + self.label_width * (self.n_frames - 1))) / self.label_width)
+                    * self.label_width + self.input_width + self.label_width * (self.n_frames - 1),
                    :]
 
         # Generate the images
@@ -135,51 +163,40 @@ class ConvLSTMModel:
         # Input images (shift label with between samples)
         input = []
         labels = []
-        for i in range(0, len(data) - self.input_width, self.label_width):
+        frames = []
+        for i in range(0, len(data) - (self.input_width + self.label_width * (self.n_frames - 1)), self.label_width):
             # Input
-            fig = full_frame(figsize, dpi)
-            plt.ylim(0, 1)  # set y-axis limits
-            plt.plot(data[i:(i + self.input_width), :], ',', color='black')
-            # Save images temporally in the buffer
-            buf = io.BytesIO()
-            plt.savefig(buf, format="png")
-            buf.seek(0)
-            # Get image from buffer
-            img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
-            buf.close()
-            plt.close(fig)
-            # Read with OpenCV to get numpy array
-            img = cv2.imdecode(img_arr, cv2.IMREAD_GRAYSCALE)
-            # Normalize image
-            img_normalized = img / 255.
-            input.append(img_normalized)
+            # Create n_frames images for the input. Always same overlapping
+            for j in range(0, self.n_frames):
+                img = self.create_image_numpy(
+                    data[(i + j * self.label_width):(i + j * self.label_width + self.input_width), :], self.input_width,
+                    100)
+                # Normalize image
+                img_normalized = img / 255.
+                frames.append(img_normalized)
+            # Append frames and clean the variable
+            input.append(frames)
+            frames = []
 
             # Labels
-            fig = full_frame(figsize, dpi)
-            plt.ylim(0, 1)  # set y-axis limits
-            plt.plot(data[(i + self.label_width):(i + self.input_width + self.label_width), :], '-', color='black')
-            # Save images temporally in the buffer
-            buf = io.BytesIO()
-            plt.savefig(buf, format="png")
-            buf.seek(0)
-            # Get image from buffer
-            img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
-            buf.close()
-            plt.close(fig)
-            # Read with OpenCV to get numpy array
-            img = cv2.imdecode(img_arr, cv2.IMREAD_GRAYSCALE)
+            # j = n_frames + 1 (to save previous position and get next image
+            img = self.create_image_numpy(
+                data[(i + j * self.label_width + + self.label_width):(
+                        i + j * self.label_width + self.input_width + self.label_width), :],
+                self.input_width, 100)
             # Normalize image
             img_normalized = img / 255.
             labels.append(img_normalized)
 
         input = np.array(input)
-        input = np.expand_dims(input, axis=(1, 4))
+        input = np.expand_dims(input, axis=4)
         labels = np.array(labels)
         labels = np.expand_dims(labels, axis=(1, 4))
 
         return input, labels
 
     def create_image_dataset(self, data, image_path):
+        # TODO: change for numpy images
         data = np.array(data, dtype=np.float32)
         # Check if the length of series is multiple of label_width
         if ((len(data) - self.input_width) % self.label_width) != 0:
@@ -219,7 +236,7 @@ class ConvLSTMModel:
         tf.config.set_soft_device_placement(True)
         # Construct the input layer with no definite frame size.
         # inp = tf.keras.layers.Input(shape=(None, *self.train[0].shape[2:]))
-        inp = tf.keras.layers.Input(shape=self.train[0].shape[1:])
+        inp = tf.keras.layers.Input(shape=(None, *self.train[0].shape[2:]))
 
         # We will construct 3 `ConvLSTM2D` layers with batch normalization,
         # followed by a `Conv3D` layer for the spatiotemporal outputs.
@@ -231,9 +248,9 @@ class ConvLSTMModel:
             activation="relu",
             data_format="channels_last",
         )(inp)
-        x = tf.keras.layers.Reshape([64, 64, 64])(x)
+        x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
         x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.Reshape([1, 64, 64, 64])(x)
+        x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
         x = tf.keras.layers.ConvLSTM2D(
             filters=64,
             kernel_size=(3, 3),
@@ -242,9 +259,9 @@ class ConvLSTMModel:
             activation="relu",
             data_format="channels_last",
         )(x)
-        x = tf.keras.layers.Reshape([64, 64, 64])(x)
+        x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
         x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.Reshape([1, 64, 64, 64])(x)
+        x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
         x = tf.keras.layers.ConvLSTM2D(
             filters=64,
             kernel_size=(1, 1),
@@ -267,7 +284,7 @@ class ConvLSTMModel:
     def compile_and_fit(self):
         # Early stopping
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                          patience=15,
+                                                          patience=10,
                                                           mode='min',
                                                           restore_best_weights=True)
 
@@ -306,6 +323,7 @@ class ConvLSTMModel:
         if not os.access(model_filepath, os.W_OK):
             print('Cannot write to {}, please fix it.'.format(model_filepath))
             exit()
+
         # Get the loss and accuracy from model_evaluation_history.
         # model_evaluation_loss, model_evaluation_accuracy = history
         # Define the string date format.
@@ -338,7 +356,7 @@ class ConvLSTMModel:
         plt.close(fig)
         return history
 
-    def prediction(self):
+    def prediction(self, scaler):
         print('Inference:')
         t_start = time.perf_counter()
         pred = self.model.predict(self.test_pred[0], batch_size=self.batch_size)
@@ -347,30 +365,153 @@ class ConvLSTMModel:
 
         # Ground truth
         gt = self.test[1]
+
+        # Figure of raw output
         # Construct a figure for the original and new frames.
         fig, axes = plt.subplots(2, 10, figsize=(20, 4))
-
         # Plot the original frames.
         for idx, ax in enumerate(axes[0]):
             ax.imshow(np.squeeze(gt[idx]), cmap="gray")
             ax.set_title(f"Sample {idx}")
             ax.axis("off")
-
         # Plot the new frames.
         for idx, ax in enumerate(axes[1]):
             ax.imshow(np.squeeze(pred[idx]), cmap="gray")
             ax.set_title(f"Sample {idx}")
             ax.axis("off")
-
-        # Display the figure.
-        # plt.show()
+        # Save the figure
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
             os.mkdir(os.path.join(FIGURES_PATH, self.name))
-        save_path = os.path.join(FIGURES_PATH, self.name, 'image_example')
+        save_path = os.path.join(FIGURES_PATH, self.name, 'raw_output')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
 
-        return pred
+        # Figure for forecasting part of image
+        img_pred = self.extract_forecast_from_image(pred)
+        img_gt = self.extract_forecast_from_image(gt)
+        # Binarize the image
+        img_pred_bin = self.binarize_image(img_pred)
+        fig, axes = plt.subplots(2, 1, figsize=(15, 6))
+        plt.suptitle('Test set: GT vs prediction', fontsize=16)
+        # Ground Truth
+        axes[0].imshow(img_gt, cmap="gray")
+        axes[0].set_title('Ground truth')
+        axes[0].axis("off")
+        # Prediction
+        axes[1].imshow(img_pred_bin, cmap="gray")
+        axes[1].set_title('Prediction')
+        axes[1].axis("off")
+        save_path = os.path.join(FIGURES_PATH, self.name, 'gt_vs_pred')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+        # Figure with numeric data
+        pred_df_trf = self.image2series(img_pred, scaler)
+        # Test set
+        test_trf = scaler.inverse_transform(self.test_df)
+        test_df_trf = pd.DataFrame(data=test_trf, columns=self.test_df.columns, index=self.test_df.index)
+
+        # Figure forecast
+        # Define default kwargs
+        defaultKwargs = {'marker': 'o',
+                         'linestyle': '',
+                         'alpha': 0.3,
+                         'markersize': 2}
+        kwargs_forecast = {'marker': 'o',
+                           'linestyle': '',
+                           'alpha': 0.5,
+                           'markersize': 2,
+                           'color': 'tab:orange'}
+        fig = plt.figure(dpi=200)
+        plt.grid()
+        self.df['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
+        pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
+        plt.ylabel('CPU usage [MHz]')
+        plt.title(f'Actual vs Forecast')
+        plt.grid()
+        plt.legend()
+        save_path = os.path.join(FIGURES_PATH, self.name, 'forecast')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+        # Figure zoom
+        fig = plt.figure(dpi=200)
+        plt.grid()
+        test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
+        pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
+        plt.ylabel('CPU usage [MHz]')
+        plt.title(f'Actual vs Forecast (Zoom)')
+        plt.grid()
+        plt.legend()
+        save_path = os.path.join(FIGURES_PATH, self.name, 'forecast_zoom')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+        return pred, img_pred_bin, pred_df_trf
+
+    def evaluation(self, pred, scaler):
+        test_trf = scaler.inverse_transform(self.test_df)
+        train_trf = scaler.inverse_transform(self.train_df)
+        y_true = np.array(test_trf[:len(pred), 0])
+        y_pred = np.array(pred['CPU usage [MHZ]'])
+        y_train = np.array(train_trf[:, 0])
+        metrics_dic = {'MAE': np.array(tf.keras.metrics.mean_absolute_error(y_true, y_pred)),
+                       'MAPE': np.array(tf.keras.metrics.mean_absolute_percentage_error(y_true, y_pred)),
+                       'RMSE': np.sqrt(np.array(tf.keras.metrics.mean_squared_error(y_true, y_pred))),
+                       'MASE': mase(y_true, y_pred, y_train),
+                       'train_time [s]': self.train_time,
+                       'inference_time [s]': self.inference_time,
+                       'model_size [B]': self.model_size
+                       }
+
+        # Save metrics
+        metrics = pd.DataFrame.from_dict(metrics_dic, orient='index')
+        print(metrics)
+        try:
+            filename = os.path.join('logs', self.name, 'metrics.txt')
+            metrics.to_csv(filename)
+        except:
+            print("Unable to write to file")
+        return metrics
+
+    @staticmethod
+    def binarize_image(img):
+        # Creates a binary image
+        # Squeeze if needed
+        img = np.squeeze(img)
+        # Take the brightest pixel of each column
+        idx = np.argmax(img, axis=0)
+        # New black image
+        new_img = np.zeros_like(img)
+        # Draw a white pixel in the brightest value of each column
+        for i in range(new_img.shape[1]):
+            new_img[idx[i], i] = 255
+        return new_img
+
+    def extract_forecast_from_image(self, pred):
+        # Get the forecasting part of each image (last label_width time steps) and concatenate
+        pred = np.squeeze(pred)
+        # Shape (frame, height, width)
+        img_pred = []
+        for i in range(pred.shape[0]):
+            img_pred.append(pred[i, :, -self.label_width:])
+        img_pred = np.concatenate(img_pred, axis=1)
+        return img_pred
+
+    def image2series(self, img, scaler):
+        # Take the brightest pixel of each column
+        idx = np.argmax(img, axis=0)
+        # Numeric (undo preprocessing)
+        pred_numeric = 100 - 1 - idx
+        pred_numeric = pred_numeric / 100
+
+        # Convert to dataframe
+        pred_df = pd.DataFrame(pred_numeric, columns=['CPU usage [MHZ]'])
+        pred_df.index = self.test_df.index[:len(pred_df)]
+        # Inverse transform
+        pred_trf = scaler.inverse_transform(pred_df)
+        pred_df_trf = pd.DataFrame(data=pred_trf, columns=['CPU usage [MHZ]'], index=pred_df.index)
+        return pred_df_trf
 
 
 def full_frame(figsize=(8.0, 8.0), dpi=8):
@@ -395,4 +536,3 @@ def full_frame(figsize=(8.0, 8.0), dpi=8):
     ax.get_yaxis().set_visible(False)
     plt.autoscale(tight=True)
     return fig
-

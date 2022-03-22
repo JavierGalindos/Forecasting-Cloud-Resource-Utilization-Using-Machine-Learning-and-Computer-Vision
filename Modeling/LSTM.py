@@ -347,6 +347,7 @@ class LstmModel:
 
         # Save metrics
         metrics = pd.DataFrame.from_dict(metrics_dic, orient='index')
+        print(metrics)
         try:
             filename = os.path.join('logs', self.name, 'metrics.txt')
             metrics.to_csv(filename)
