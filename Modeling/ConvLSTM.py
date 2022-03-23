@@ -473,6 +473,20 @@ class ConvLSTMModel:
             print("Unable to write to file")
         return metrics
 
+    def errors_array(self, pred, scaler):
+        test_trf = scaler.inverse_transform(self.test_df)
+        y_true = np.array(test_trf[:, 0])
+        y_pred = np.array(pred['CPU usage [MHZ]'])
+        # TODO: change
+        metrics_dic = {'MAE': np.array(tf.keras.metrics.mean_absolute_error(y_true, y_pred)),
+                       'MAPE': np.array(tf.keras.metrics.mean_absolute_percentage_error(y_true, y_pred)),
+                       'RMSE': np.sqrt(np.array(tf.keras.metrics.mean_squared_error(y_true, y_pred))),
+                       'MASE': mase(y_true, y_pred, y_train),
+                       'train_time [s]': self.train_time,
+                       'inference_time [s]': self.inference_time,
+                       'model_size [B]': self.model_size
+                       }
+
     @staticmethod
     def binarize_image(img):
         # Creates a binary image

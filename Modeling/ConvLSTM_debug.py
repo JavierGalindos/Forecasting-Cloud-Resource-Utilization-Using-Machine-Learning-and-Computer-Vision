@@ -27,12 +27,12 @@ if __name__ == '__main__':
                                    test_df=test_df,
                                    epoch=50,
                                    batch_size=16,
-                                   model_path='./logs/ConvLSTM/checkpoints/ConvLSTM_model_2022_03_21__20_06_37.hdf5',
+                                   model_path=None,
                                    )
 
     # Training
     print('Training:')
-    # history = ConvLSTM_model.compile_and_fit()
+    history = ConvLSTM_model.compile_and_fit()
     # Prediction
     print('Prediction:')
     pred, img_pred, pred_df_trf = ConvLSTM_model.prediction(scaler)
