@@ -63,3 +63,8 @@ export PYTHONPATH='/Users/javier.galindos/Library/CloudStorage/OneDrive-Fundaci√
 python3 train_LSTM.py -e 20 -n '_input_1day' -i 288 -s 'LSTM/input_chunk'
 ```
 
+# Python path
+GPU:
+```
+export PYTHONPATH='~/intern-project-javier/'
+```
