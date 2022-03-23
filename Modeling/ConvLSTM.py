@@ -48,7 +48,6 @@ figsize = (8, 8)
 
 
 class ConvLSTMModel:
-    # TODO: Clean useless hyperameters and classification code
     def __init__(self, input_width, label_width, df,
                  train_df, val_df, test_df,
                  epoch=100, batch_size=16,

@@ -226,6 +226,57 @@ def plot_stats(stats_df: pd.DataFrame, features: List[str] = 'CPU usage [MHZ]', 
 
 
 # Metrics
+def mae_array(y, y_hat):
+    """ Mean Absolute Error.
+        Return the array of the individual errors
+    Parameters
+    ----------
+    y
+        ground truth
+    y_hat
+        prediction
+
+    Returns
+    -------
+
+    """
+    return np.abs(y - y_hat)
+
+
+def rmse_array(y, y_hat):
+    """ Root Mean Squared Error
+        Return the array of the individual errors
+    Parameters
+    ----------
+    y
+        ground truth
+    y_hat
+        prediction
+
+    Returns
+    -------
+
+    """
+    return np.sqrt(np.square(y - y_hat))
+
+
+def mape_array(y, y_hat):
+    """ Mean Absolute Percentage Error
+            Return the array of the individual errors
+        Parameters
+        ----------
+        y
+            ground truth
+        y_hat
+            prediction
+
+        Returns
+        -------
+
+        """
+    return np.abs((y - y_hat)/y)*100
+
+
 def mase(y, y_hat, y_train) -> np.ndarray:
     """ Mean Absolute Scale Error.
     Parameters
