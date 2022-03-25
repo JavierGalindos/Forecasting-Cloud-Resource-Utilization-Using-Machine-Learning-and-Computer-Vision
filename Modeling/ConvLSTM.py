@@ -65,7 +65,7 @@ class ConvLSTMModel:
         self.label_width = label_width
 
         # Dataframe for predictions (take test + input_length from validation set)
-        self.test_pred_df = pd.concat([self.val_df.iloc[-(self.input_width - self.label_width):, :], self.test_df])
+        self.test_pred_df = pd.concat([self.val_df.iloc[-self.input_width:, :], self.test_df])
 
         # Hyper parameters.
         self.epoch = epoch
