@@ -36,7 +36,7 @@ else:
     print('figures saved to {}'.format(DATASET_PATH))
 
 # Set the seed for reproducibility
-seed_constant = 7
+seed_constant = 137
 np.random.seed(seed_constant)
 random.seed(seed_constant)
 tf.random.set_seed(seed_constant)
@@ -510,7 +510,7 @@ class ConvLSTMModel:
         plt.savefig(save_path, bbox_inches='tight')
         # Save the errors
         try:
-            filename = os.path.join('logs', self.name, 'errors.csv')
+            filename = os.path.join('./logs/ConvLSTM', self.name, 'errors.csv')
             errors.to_csv(filename)
         except:
             print("Unable to write to file")
