@@ -36,7 +36,7 @@ else:
     print('figures saved to {}'.format(DATASET_PATH))
 
 # Set the seed for reproducibility
-seed_constant = 137
+seed_constant = 42
 np.random.seed(seed_constant)
 random.seed(seed_constant)
 tf.random.set_seed(seed_constant)
@@ -49,7 +49,7 @@ figsize = (8, 8)
 class ConvLSTMModel:
     def __init__(self, input_width, label_width, df,
                  train_df, val_df, test_df,
-                 epoch=100, batch_size=16,
+                 epoch=100, batch_size=64,
                  n_frames=1,
                  name='ConvLSTM',
                  model_path=None,
