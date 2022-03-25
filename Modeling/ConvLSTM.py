@@ -244,9 +244,9 @@ class ConvLSTMModel:
             activation="relu",
             data_format="channels_last",
         )(inp)
-        x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
-        x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
+        # x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
+        # x = tf.keras.layers.BatchNormalization()(x)
+        # x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
         x = tf.keras.layers.ConvLSTM2D(
             filters=64,
             kernel_size=(3, 3),
@@ -255,9 +255,9 @@ class ConvLSTMModel:
             activation="relu",
             data_format="channels_last",
         )(x)
-        x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
-        x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
+        # x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
+        # x = tf.keras.layers.BatchNormalization()(x)
+        # x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
         x = tf.keras.layers.ConvLSTM2D(
             filters=64,
             kernel_size=(1, 1),
