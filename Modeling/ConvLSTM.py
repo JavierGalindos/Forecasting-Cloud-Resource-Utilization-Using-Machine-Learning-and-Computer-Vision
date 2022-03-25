@@ -273,7 +273,7 @@ class ConvLSTMModel:
         # Next, we will build the complete model and compile it.
         model = tf.keras.models.Model(inp, x)
         model.compile(
-            loss=tf.keras.losses.KLDivergence(), optimizer=tf.keras.optimizers.Adam(),
+            loss=tf.keras.losses.MeanAbsoluteError(), optimizer=tf.keras.optimizers.Adam(),
         )
         return model
 
@@ -362,18 +362,34 @@ class ConvLSTMModel:
         # Ground truth
         gt = self.test[1]
 
-        # Figure of raw output
+        # Test_pred dataset
+        test_input = self.test_pred[0]
+        test_label = self.test_pred[1]
         # Construct a figure for the original and new frames.
-        fig, axes = plt.subplots(2, 10, figsize=(20, 4))
+        fig, axes = plt.subplots(4, 5, figsize=(20, 20))
         # Plot the original frames.
+        axes[0][2].set_title('Input')
         for idx, ax in enumerate(axes[0]):
-            ax.imshow(np.squeeze(gt[idx]), cmap="gray")
-            ax.set_title(f"Sample {idx}")
+            ax.imshow(np.squeeze(test_input[idx]), cmap="gray")
+            # ax.set_title(f"Sample {idx}")
             ax.axis("off")
         # Plot the new frames.
+        axes[1][2].set_title('Labels')
         for idx, ax in enumerate(axes[1]):
+            ax.imshow(np.squeeze(test_label[idx]), cmap="gray")
+            # ax.set_title(f"Sample {idx}")
+            ax.axis("off")
+        axes[2][2].set_title('Output')
+        # Prediction
+        for idx, ax in enumerate(axes[2]):
             ax.imshow(np.squeeze(pred[idx]), cmap="gray")
-            ax.set_title(f"Sample {idx}")
+            # ax.set_title(f"Sample {idx}")
+            ax.axis("off")
+        # Prediction binarize
+        axes[3][2].set_title('Output binarized')
+        for idx, ax in enumerate(axes[3]):
+            ax.imshow(np.squeeze(self.binarize_image(pred[idx])), cmap="gray")
+            # ax.set_title(f"Sample {idx}")
             ax.axis("off")
         # Save the figure
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
@@ -388,7 +404,7 @@ class ConvLSTMModel:
         # Binarize the image
         img_pred_bin = self.binarize_image(img_pred)
         fig, axes = plt.subplots(2, 1, figsize=(15, 6))
-        plt.suptitle('Test set: GT vs prediction', fontsize=16)
+        plt.suptitle('Test set: ground truth vs prediction', fontsize=16)
         # Ground Truth
         axes[0].imshow(img_gt, cmap="gray")
         axes[0].set_title('Ground truth')
