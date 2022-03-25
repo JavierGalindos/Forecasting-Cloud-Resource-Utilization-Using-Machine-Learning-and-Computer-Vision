@@ -10,12 +10,12 @@ import datetime
 import time
 import math
 
-from DataExploration.BitbrainsUtils import load_VM, plot_timeSeries, mase, split_data, data_transformation, reg2class, class2num
+from DataExploration.BitbrainsUtils import *
 
 FIGURES_PATH = '../Figures/Modeling/LSTM'
 
 if not os.access(FIGURES_PATH, os.F_OK):
-    os.mkdir(FIGURES_PATH)
+    os.makedirs(FIGURES_PATH)
 if not os.access(FIGURES_PATH, os.W_OK):
     print('Cannot write to {}, please fix it.'.format(FIGURES_PATH))
     exit()
@@ -171,7 +171,7 @@ class LstmModel:
             labels = tf.keras.utils.to_categorical(labels, num_classes=self.num_classes)
         return input, labels
 
-    def compile_and_fit(self, patience=100):
+    def compile_and_fit(self, patience=50):
         # Early stopping
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                           patience=patience,
@@ -180,11 +180,11 @@ class LstmModel:
 
         # Tensorboard
         # log_dir = f'logs/fit/{self.name}' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        log_dir = f'logs/{self.name}/tensorboard'
+        log_dir = f'logs/LSTM/{self.name}/tensorboard'
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
         # Save checkpoint
-        checkpoint_filepath = f'logs/{self.name}/checkpoints'
+        checkpoint_filepath = f'logs/LSTM/{self.name}/checkpoints'
         if not os.access(checkpoint_filepath, os.F_OK):
             os.makedirs(checkpoint_filepath)
         if not os.access(checkpoint_filepath, os.W_OK):
@@ -248,7 +248,7 @@ class LstmModel:
         plt.legend(['Train', 'Validation'], loc='upper right')
         # plt.show()
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
-            os.mkdir(os.path.join(FIGURES_PATH, self.name))
+            os.makedirs(os.path.join(FIGURES_PATH, self.name))
         save_path = os.path.join(FIGURES_PATH, self.name, 'Loss')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
@@ -309,7 +309,7 @@ class LstmModel:
         plt.grid()
         plt.legend()
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
-            os.mkdir(os.path.join(FIGURES_PATH, self.name))
+            os.makedirs(os.path.join(FIGURES_PATH, self.name))
         save_path = os.path.join(FIGURES_PATH, self.name, 'forecast')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
@@ -324,7 +324,7 @@ class LstmModel:
         plt.grid()
         plt.legend()
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
-            os.mkdir(os.path.join(FIGURES_PATH, self.name))
+            os.makedirs(os.path.join(FIGURES_PATH, self.name))
         save_path = os.path.join(FIGURES_PATH, self.name, 'forecast_zoom')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
@@ -349,11 +349,40 @@ class LstmModel:
         metrics = pd.DataFrame.from_dict(metrics_dic, orient='index')
         print(metrics)
         try:
-            filename = os.path.join('logs', self.name, 'metrics.txt')
+            filename = os.path.join('logs/LSTM', self.name, 'metrics.txt')
             metrics.to_csv(filename)
         except:
             print("Unable to write to file")
+
+        # Errors boxplot
+        errors = self.errors_boxplot(pred, scaler)
         return metrics
+
+    def errors_boxplot(self, pred, scaler):
+        test_trf = scaler.inverse_transform(self.test_df)
+        y_true = np.array(test_trf[:len(pred), 0])
+        y_pred = np.array(pred['CPU usage [MHZ]'])
+        # Create a dataframe of errrs
+        errors_dic = {'MAE': mae_array(y_true, y_pred),
+                       'MAPE': mape_array(y_true, y_pred),
+                       'RMSE': rmse_array(y_true, y_pred),
+                       }
+        errors = pd.DataFrame.from_dict(errors_dic, orient='index')
+        errors = errors.T
+        print(errors.describe())
+        ax = sns.boxplot(data=errors).set(title='Errors box-plot',
+                                          ylabel='Error')
+        if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
+            os.makedirs(os.path.join(FIGURES_PATH, self.name))
+        save_path = os.path.join(FIGURES_PATH, self.name, 'errors_boxplot')
+        plt.savefig(save_path, bbox_inches='tight')
+        # Save the errors
+        try:
+            filename = os.path.join('logs', self.name, 'errors.txt')
+            errors.to_csv(filename)
+        except:
+            print("Unable to write to file")
+        return errors
 
 
 def add_daily_info(df: pd.DataFrame) -> pd.DataFrame:

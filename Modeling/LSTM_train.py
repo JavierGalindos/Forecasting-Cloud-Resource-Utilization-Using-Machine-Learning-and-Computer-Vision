@@ -33,6 +33,7 @@ parser.add_argument('--classification', type=bool, default=False,
 
 args = parser.parse_args()
 
+
 EPOCH = int(args.epoch)
 NAME = args.name
 INPUT_LENGTH = int(args.input_length)

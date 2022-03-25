@@ -13,8 +13,7 @@ import io
 import cv2
 import random
 
-from DataExploration.BitbrainsUtils import load_VM, plot_timeSeries, mase, split_data, data_transformation, reg2class, \
-    class2num
+from DataExploration.BitbrainsUtils import *
 
 FIGURES_PATH = '../Figures/Modeling/ConvLSTM'
 
@@ -66,7 +65,7 @@ class ConvLSTMModel:
         self.label_width = label_width
 
         # Dataframe for predictions (take test + input_length from validation set)
-        self.test_pred_df = pd.concat([self.val_df.iloc[-self.input_width:, :], self.test_df])
+        self.test_pred_df = pd.concat([self.val_df.iloc[-(self.input_width - self.label_width):, :], self.test_df])
 
         # Hyper parameters.
         self.epoch = epoch
@@ -78,8 +77,6 @@ class ConvLSTMModel:
         self.train_time = 0
         self.inference_time = 0
         self.model_size = 0.
-        self.mean_class = None
-        self.num_classes = 0
 
         if model_path is not None:
             self.model = tf.keras.models.load_model(model_path)
@@ -180,7 +177,7 @@ class ConvLSTMModel:
             # Labels
             # j = n_frames + 1 (to save previous position and get next image
             img = self.create_image_numpy(
-                data[(i + j * self.label_width + + self.label_width):(
+                data[(i + j * self.label_width + self.label_width):(
                         i + j * self.label_width + self.input_width + self.label_width), :],
                 self.input_width, 100)
             # Normalize image
@@ -276,7 +273,7 @@ class ConvLSTMModel:
         # Next, we will build the complete model and compile it.
         model = tf.keras.models.Model(inp, x)
         model.compile(
-            loss=tf.keras.losses.binary_crossentropy, optimizer=tf.keras.optimizers.Adam(),
+            loss=tf.keras.losses.KLDivergence(), optimizer=tf.keras.optimizers.Adam(),
         )
         return model
 
@@ -289,7 +286,7 @@ class ConvLSTMModel:
 
         # Tensorboard
         # log_dir = f'logs/fit/{self.name}' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        log_dir = f'logs/{self.name}/tensorboard'
+        log_dir = f'logs/ConvLSTM/{self.name}/tensorboard'
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
         # Reduce learning rate on plateau
@@ -316,7 +313,7 @@ class ConvLSTMModel:
 
         # Save the best model (getting the best with early_stopping callback)
         # Check the path exists
-        model_filepath = f'logs/{self.name}/checkpoints'
+        model_filepath = f'logs/ConvLSTM/{self.name}/checkpoints'
         if not os.access(model_filepath, os.F_OK):
             os.makedirs(model_filepath)
         if not os.access(model_filepath, os.W_OK):
@@ -349,7 +346,7 @@ class ConvLSTMModel:
         plt.legend(['Train', 'Validation'], loc='upper right')
         # plt.show()
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
-            os.mkdir(os.path.join(FIGURES_PATH, self.name))
+            os.makedirs(os.path.join(FIGURES_PATH, self.name))
         save_path = os.path.join(FIGURES_PATH, self.name, 'Loss')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
@@ -380,7 +377,7 @@ class ConvLSTMModel:
             ax.axis("off")
         # Save the figure
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
-            os.mkdir(os.path.join(FIGURES_PATH, self.name))
+            os.makedirs(os.path.join(FIGURES_PATH, self.name))
         save_path = os.path.join(FIGURES_PATH, self.name, 'raw_output')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
@@ -467,25 +464,40 @@ class ConvLSTMModel:
         metrics = pd.DataFrame.from_dict(metrics_dic, orient='index')
         print(metrics)
         try:
-            filename = os.path.join('logs', self.name, 'metrics.txt')
+            filename = os.path.join('logs/ConvLSTM', self.name, 'metrics.txt')
             metrics.to_csv(filename)
         except:
             print("Unable to write to file")
+
+        # Errors boxplot
+        errors = self.errors_boxplot(pred, scaler)
         return metrics
 
-    def errors_array(self, pred, scaler):
+    def errors_boxplot(self, pred, scaler):
         test_trf = scaler.inverse_transform(self.test_df)
-        y_true = np.array(test_trf[:, 0])
+        y_true = np.array(test_trf[:len(pred), 0])
         y_pred = np.array(pred['CPU usage [MHZ]'])
-        # TODO: change
-        metrics_dic = {'MAE': np.array(tf.keras.metrics.mean_absolute_error(y_true, y_pred)),
-                       'MAPE': np.array(tf.keras.metrics.mean_absolute_percentage_error(y_true, y_pred)),
-                       'RMSE': np.sqrt(np.array(tf.keras.metrics.mean_squared_error(y_true, y_pred))),
-                       'MASE': mase(y_true, y_pred, y_train),
-                       'train_time [s]': self.train_time,
-                       'inference_time [s]': self.inference_time,
-                       'model_size [B]': self.model_size
-                       }
+        # Create a dataframe of errors
+        errors_dic = {'MAE': mae_array(y_true, y_pred),
+                      'MAPE': mape_array(y_true, y_pred),
+                      'RMSE': rmse_array(y_true, y_pred),
+                      }
+        errors = pd.DataFrame.from_dict(errors_dic, orient='index')
+        errors = errors.T
+        print(errors.describe())
+        ax = sns.boxplot(data=errors).set(title='Errors box-plot',
+                                          ylabel='Error')
+        if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
+            os.mkdir(os.path.join(FIGURES_PATH, self.name))
+        save_path = os.path.join(FIGURES_PATH, self.name, 'errors_boxplot')
+        plt.savefig(save_path, bbox_inches='tight')
+        # Save the errors
+        try:
+            filename = os.path.join('logs', self.name, 'errors.csv')
+            errors.to_csv(filename)
+        except:
+            print("Unable to write to file")
+        return errors
 
     @staticmethod
     def binarize_image(img):
@@ -518,12 +530,17 @@ class ConvLSTMModel:
         pred_numeric = 100 - 1 - idx
         pred_numeric = pred_numeric / 100
 
+        # Check if the prediction is longer than the test set (then trim it)
+        if len(pred_numeric) > len(self.test_df):
+            pred_numeric = pred_numeric[:len(self.test_df)]
+
         # Convert to dataframe
         pred_df = pd.DataFrame(pred_numeric, columns=['CPU usage [MHZ]'])
         pred_df.index = self.test_df.index[:len(pred_df)]
         # Inverse transform
         pred_trf = scaler.inverse_transform(pred_df)
         pred_df_trf = pd.DataFrame(data=pred_trf, columns=['CPU usage [MHZ]'], index=pred_df.index)
+        # pred_df_trf = pred_df_trf.shift(periods=-self.label_width)
         return pred_df_trf
 
 
