@@ -176,18 +176,21 @@ class ConvLSTMModel:
 
             # Labels
             # j = n_frames + 1 (to save previous position and get next image
-            img = self.create_image_numpy(
-                data[(i + j * self.label_width + self.label_width):(
-                        i + j * self.label_width + self.input_width + self.label_width), :],
-                self.input_width, 100)
-            # Normalize image
-            img_normalized = img / 255.
-            labels.append(img_normalized)
+            for j in range(0, self.n_frames):
+                img = self.create_image_numpy(
+                    data[(i + j * self.label_width + self.label_width):(
+                            i + j * self.label_width + self.input_width + self.label_width), :],
+                    self.input_width, 100)
+                # Normalize image
+                img_normalized = img / 255.
+                frames.append(img_normalized)
+            labels.append(frames)
+            frames = []
 
         input = np.array(input)
         input = np.expand_dims(input, axis=4)
         labels = np.array(labels)
-        labels = np.expand_dims(labels, axis=(1, 4))
+        labels = np.expand_dims(labels, axis=4)
 
         return input, labels
 
@@ -273,7 +276,7 @@ class ConvLSTMModel:
         # Next, we will build the complete model and compile it.
         model = tf.keras.models.Model(inp, x)
         model.compile(
-            loss=tf.keras.losses.BinaryFocalCrossentropy(), optimizer=tf.keras.optimizers.Adam(),
+            loss=tf.keras.losses.BinaryCrossentropy(), optimizer=tf.keras.optimizers.Adam(),
         )
         return model
 
