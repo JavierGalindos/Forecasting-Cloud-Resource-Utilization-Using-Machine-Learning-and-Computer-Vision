@@ -36,7 +36,7 @@ else:
     print('figures saved to {}'.format(DATASET_PATH))
 
 # Set the seed for reproducibility
-seed_constant = 42
+seed_constant = 7
 np.random.seed(seed_constant)
 random.seed(seed_constant)
 tf.random.set_seed(seed_constant)
