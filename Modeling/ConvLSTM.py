@@ -49,7 +49,7 @@ figsize = (8, 8)
 class ConvLSTMModel:
     def __init__(self, input_width, label_width, df,
                  train_df, val_df, test_df,
-                 epoch=100, batch_size=64,
+                 epoch=100, batch_size=16,
                  n_frames=1,
                  name='ConvLSTM',
                  model_path=None,
