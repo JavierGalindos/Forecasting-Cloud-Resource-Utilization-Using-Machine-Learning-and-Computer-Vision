@@ -273,7 +273,7 @@ class ConvLSTMModel:
         # Next, we will build the complete model and compile it.
         model = tf.keras.models.Model(inp, x)
         model.compile(
-            loss=tf.keras.losses.MeanAbsoluteError(), optimizer=tf.keras.optimizers.Adam(),
+            loss=tf.keras.losses.BinaryCrossentropy(), optimizer=tf.keras.optimizers.Adam(),
         )
         return model
 
@@ -305,6 +305,7 @@ class ConvLSTMModel:
                                  self.train[1],
                                  epochs=self.epoch,
                                  batch_size=self.batch_size,
+                                 shuffle=False,
                                  validation_data=(self.val[0], self.val[1]),
                                  callbacks=[early_stopping, tensorboard_callback, reduce_lr])
 
@@ -480,7 +481,7 @@ class ConvLSTMModel:
         metrics = pd.DataFrame.from_dict(metrics_dic, orient='index')
         print(metrics)
         try:
-            filename = os.path.join('logs/ConvLSTM', self.name, 'metrics.txt')
+            filename = os.path.join('./logs/ConvLSTM', self.name, 'metrics.txt')
             metrics.to_csv(filename)
         except:
             print("Unable to write to file")
