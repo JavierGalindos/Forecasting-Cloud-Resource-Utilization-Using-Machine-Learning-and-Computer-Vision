@@ -285,7 +285,7 @@ class ConvLSTMModel:
         model.compile(
             loss=tf.keras.losses.BinaryCrossentropy(),
             optimizer=tf.keras.optimizers.Adam(),
-            metrics=[tf.metrics.Accuracy(), tf.metrics.Precision(), tf.metrics.Recall()],
+            metrics=[tf.metrics.BinaryAccuracy(), tf.metrics.Precision(), tf.metrics.Recall()],
         )
         return model
 
