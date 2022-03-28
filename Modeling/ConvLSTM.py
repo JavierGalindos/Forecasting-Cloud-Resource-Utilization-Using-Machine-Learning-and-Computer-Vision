@@ -5,7 +5,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import tensorflow as tf
+import keras.backend as K
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, LabelEncoder
+from sklearn.utils import class_weight
 import datetime as dt
 import time
 import math
@@ -277,7 +279,9 @@ class ConvLSTMModel:
         # Next, we will build the complete model and compile it.
         model = tf.keras.models.Model(inp, x)
         model.compile(
-            loss=tf.keras.losses.BinaryCrossentropy(from_logits=True), optimizer=tf.keras.optimizers.Adam(),
+            loss=DiceLoss,
+            optimizer=tf.keras.optimizers.Adam(),
+            metrics=[tf.metrics.Accuracy(), tf.metrics.Precision(), tf.metrics.Recall()],
         )
         return model
 
@@ -589,3 +593,26 @@ def full_frame(figsize=(8.0, 8.0), dpi=8):
     ax.get_yaxis().set_visible(False)
     plt.autoscale(tight=True)
     return fig
+
+
+def DiceLoss(y_true, y_pred, smooth=1e-6):
+    # flatten label and prediction tensors
+    y_pred = K.flatten(y_pred)
+    y_true = K.flatten(y_true)
+
+    intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
+    dice = (2. * intersection + smooth) / (K.sum(K.square(y_true),-1) + K.sum(K.square(y_pred),-1) + smooth)
+    return 1 - dice
+
+
+def DiceBCELoss(y_true, y_pred, smooth=1e-6):
+    # flatten label and prediction tensors
+    y_pred = K.flatten(y_pred)
+    y_true = K.flatten(y_true)
+
+    BCE = tf.keras.losses.binary_crossentropy(y_true, y_pred)
+    intersection = K.sum(K.dot(y_true, y_pred))
+    dice_loss = 1 - (2 * intersection + smooth) / (K.sum(y_true) + K.sum(y_pred) + smooth)
+    Dice_BCE = BCE + dice_loss
+
+    return Dice_BCE
