@@ -467,9 +467,7 @@ class ConvLSTMModel:
             pred_df.index = self.test_df.index[:len(pred_df)]
             # Inverse transform
             pred_trf = scaler.inverse_transform(pred_df)
-            pred_df_trf = pd.DataFrame(data=pred_trf, columns=['CPU usage [MHZ]'], index=self.test_df.index)
-            if self.classification is True:
-                pred_df_trf = pred_df
+            pred_df_trf = pd.DataFrame(data=pred_trf, columns=['CPU usage [MHZ]'], index=self.test_df.index[:len(pred_df)])
             # Whole set
             # Convert to dataframe
             df_trf = scaler.inverse_transform(self.df)
