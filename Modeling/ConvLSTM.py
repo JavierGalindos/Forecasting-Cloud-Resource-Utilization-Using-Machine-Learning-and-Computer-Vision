@@ -193,7 +193,8 @@ class ConvLSTMModel:
                 labels.append(frames)
                 frames = []
             else:
-                labels.append(data[(i + self.input_width):(i + self.input_width + self.label_width), 0])
+                labels.append(data[(i + j * self.label_width + self.input_width):(
+                        i + self.input_width + j * self.label_width + self.label_width), 0])
 
         input = np.array(input).astype(int)  # Change to int
         input = np.expand_dims(input, axis=4)
