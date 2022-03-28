@@ -513,7 +513,10 @@ class ConvLSTMModel:
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
 
-        return pred, img_pred_bin, pred_df_trf
+        if self.numeric is False:
+            return pred, img_pred_bin, pred_df_trf
+        else:
+            return pred, pred_df_trf
 
     def evaluation(self, pred, scaler):
         test_trf = scaler.inverse_transform(self.test_df)

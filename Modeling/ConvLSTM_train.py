@@ -69,7 +69,10 @@ if __name__ == "__main__":
     history = ConvLSTM_model.compile_and_fit()
     # Prediction
     print('Prediction:')
-    pred, img_pred, pred_df_trf = ConvLSTM_model.prediction(scaler)
+    if NUMERIC is False:
+        pred, img_pred, pred_df_trf = ConvLSTM_model.prediction(scaler)
+    else:
+        pred, pred_df_trf = ConvLSTM_model.prediction(scaler)
     # Evaluation
     print('Evaluation:')
     metrics = ConvLSTM_model.evaluation(pred_df_trf, scaler)
