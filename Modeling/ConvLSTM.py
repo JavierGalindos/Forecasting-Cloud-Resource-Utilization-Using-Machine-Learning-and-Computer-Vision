@@ -64,14 +64,15 @@ class ConvLSTMModel:
         self.input_width = input_width
         self.label_width = label_width
 
-        # Dataframe for predictions (take test + input_length from validation set)
-        self.test_pred_df = pd.concat([self.val_df.iloc[-self.input_width:, :], self.test_df])
-
         # Hyper parameters.
         self.epoch = epoch
         self.batch_size = batch_size
         self.name = name
         self.n_frames = n_frames
+
+        # Dataframe for predictions (take test + input_length from validation set)
+        self.test_pred_df = pd.concat(
+            [self.val_df.iloc[-(self.input_width + self.label_width * (self.n_frames - 1)):, :], self.test_df])
 
         # Model parameters
         self.train_time = 0
@@ -276,7 +277,7 @@ class ConvLSTMModel:
         # Next, we will build the complete model and compile it.
         model = tf.keras.models.Model(inp, x)
         model.compile(
-            loss=tf.keras.losses.BinaryCrossentropy(), optimizer=tf.keras.optimizers.Adam(),
+            loss=tf.keras.losses.BinaryCrossentropy(from_logits=True), optimizer=tf.keras.optimizers.Adam(),
         )
         return model
 
@@ -363,12 +364,14 @@ class ConvLSTMModel:
         self.inference_time = time.perf_counter() - t_start
         print("Inference time:", f'{self.inference_time:.2f} sec')
 
+        # [-1] to take the last frame when having multiple
+        pred = pred[:, -1, ...]
         # Ground truth
-        gt = self.test[1]
-
+        gt = self.test[1][:, -1, ...]
         # Test_pred dataset
-        test_input = self.test_pred[0]
-        test_label = self.test_pred[1]
+        test_input = self.test_pred[0][:, -1, ...]
+        test_label = self.test_pred[1][:, -1, ...]
+
         # Construct a figure for the original and new frames.
         fig, axes = plt.subplots(4, 5, figsize=(20, 20))
         # Plot the original frames.
