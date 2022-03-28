@@ -273,7 +273,7 @@ class ConvLSTMModel:
             data_format="channels_last",
         )(x)
         x = tf.keras.layers.Conv3D(
-            filters=1, kernel_size=(3, 3, 3), activation="softmax", padding="same",
+            filters=1, kernel_size=(3, 3, 3), activation="None", padding="same",
         )(x)
         # # Add layer for classification
         # x = tf.keras.layers.Conv2D(
@@ -283,7 +283,7 @@ class ConvLSTMModel:
         # Next, we will build the complete model and compile it.
         model = tf.keras.models.Model(inp, x)
         model.compile(
-            loss=tf.keras.losses.BinaryCrossentropy(),
+            loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
             optimizer=tf.keras.optimizers.Adam(),
             metrics=[tf.metrics.BinaryAccuracy(), tf.metrics.Precision(), tf.metrics.Recall()],
         )
