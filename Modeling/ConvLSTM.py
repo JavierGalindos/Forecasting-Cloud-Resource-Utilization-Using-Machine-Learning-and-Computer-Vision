@@ -464,7 +464,7 @@ class ConvLSTMModel:
             pred = np.reshape(pred, (-1, 1))
             # Convert to dataframe
             pred_df = pd.DataFrame(pred, columns=['CPU usage [MHZ]'])
-            pred_df.index = self.test_df.index
+            pred_df.index = self.test_df.index[:len(pred_df)]
             # Inverse transform
             pred_trf = scaler.inverse_transform(pred_df)
             pred_df_trf = pd.DataFrame(data=pred_trf, columns=['CPU usage [MHZ]'], index=self.test_df.index)
