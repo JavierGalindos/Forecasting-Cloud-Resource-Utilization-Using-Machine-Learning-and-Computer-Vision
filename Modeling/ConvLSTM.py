@@ -55,6 +55,7 @@ class ConvLSTMModel:
                  n_frames=1,
                  name='ConvLSTM',
                  model_path=None,
+                 numeric=False,
                  ):
         # Store the raw data.
         self.df = df
@@ -71,6 +72,7 @@ class ConvLSTMModel:
         self.batch_size = batch_size
         self.name = name
         self.n_frames = n_frames
+        self.numeric = numeric
 
         # Dataframe for predictions (take test + input_length from validation set)
         self.test_pred_df = pd.concat(
@@ -178,22 +180,28 @@ class ConvLSTMModel:
             frames = []
 
             # Labels
-            # j = n_frames + 1 (to save previous position and get next image
-            for j in range(0, self.n_frames):
-                img = self.create_image_numpy(
-                    data[(i + j * self.label_width + self.label_width):(
-                            i + j * self.label_width + self.input_width + self.label_width), :],
-                    self.input_width, 100)
-                # Normalize image
-                img_normalized = img / 255.
-                frames.append(img_normalized)
-            labels.append(frames)
-            frames = []
+            if self.numeric is False:
+                # j = n_frames + 1 (to save previous position and get next image
+                for j in range(0, self.n_frames):
+                    img = self.create_image_numpy(
+                        data[(i + j * self.label_width + self.label_width):(
+                                i + j * self.label_width + self.input_width + self.label_width), :],
+                        self.input_width, 100)
+                    # Normalize image
+                    img_normalized = img / 255.
+                    frames.append(img_normalized)
+                labels.append(frames)
+                frames = []
+            else:
+                labels.append(data[(i + self.input_width):(i + self.input_width + self.label_width), 0])
 
         input = np.array(input).astype(int)  # Change to int
         input = np.expand_dims(input, axis=4)
-        labels = np.array(labels).astype(int)
-        labels = np.expand_dims(labels, axis=4)
+        if self.numeric is False:
+            labels = np.array(labels).astype(int)
+            labels = np.expand_dims(labels, axis=4)
+        else:
+            labels = np.array(labels).reshape((-1, self.label_width, 1))
 
         return input, labels
 
@@ -238,7 +246,7 @@ class ConvLSTMModel:
         tf.config.set_soft_device_placement(True)
         # Construct the input layer with no definite frame size.
         # inp = tf.keras.layers.Input(shape=(None, *self.train[0].shape[2:]))
-        inp = tf.keras.layers.Input(shape=(None, *self.train[0].shape[2:]))
+        inp = tf.keras.layers.Input(shape=self.train[0].shape[1:])
 
         # We will construct 3 `ConvLSTM2D` layers with batch normalization,
         # followed by a `Conv3D` layer for the spatiotemporal outputs.
@@ -272,21 +280,34 @@ class ConvLSTMModel:
             activation="relu",
             data_format="channels_last",
         )(x)
-        x = tf.keras.layers.Conv3D(
-            filters=1, kernel_size=(3, 3, 3), activation="relu", padding="same",
-        )(x)
-        # # Add layer for classification
-        # x = tf.keras.layers.Conv2D(
-        #     1, 1, activation='softmax', padding='same'
-        # )(x)
+        if self.numeric is False:
+            x = tf.keras.layers.Conv3D(
+                filters=1, kernel_size=(3, 3, 3), activation="sigmoid", padding="same",
+            )(x)
+        else:
+            x = tf.keras.layers.Flatten()(x)
+            if self.label_width == 1:
+                # Shape => [batch, time, features]
+                x = tf.keras.layers.Dense(units=1)(x)
+            else:
+                # Shape => [batch, 1, out_steps*features]
+                x = tf.keras.layers.Dense(units=self.label_width, kernel_initializer=tf.initializers.zeros())(x)
+                # Shape => [batch, out_steps, features]
+                x = tf.keras.layers.Reshape([self.label_width, 1])(x)
 
         # Next, we will build the complete model and compile it.
         model = tf.keras.models.Model(inp, x)
-        model.compile(
-            loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-            optimizer=tf.keras.optimizers.Adam(),
-            metrics=tf.metrics.BinaryAccuracy(),
-        )
+        if self.numeric is False:
+            model.compile(
+                loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
+                optimizer=tf.keras.optimizers.Adam(),
+                metrics=tf.metrics.BinaryAccuracy(),
+            )
+        else:
+            model.compile(loss=tf.losses.MeanSquaredError(),
+                          optimizer=tf.optimizers.Adam(),
+                          metrics=tf.metrics.MeanAbsoluteError(),
+                          )
         return model
 
     def compile_and_fit(self):
@@ -372,71 +393,91 @@ class ConvLSTMModel:
         self.inference_time = time.perf_counter() - t_start
         print("Inference time:", f'{self.inference_time:.2f} sec')
 
-        # [-1] to take the last frame when having multiple
-        pred = pred[:, -1, ...]
-        # Ground truth
-        gt = self.test[1][:, -1, ...]
-        # Test_pred dataset
-        test_input = self.test_pred[0][:, -1, ...]
-        test_label = self.test_pred[1][:, -1, ...]
+        if self.numeric is False:
+            # [-1] to take the last frame when having multiple
+            pred = pred[:, -1, ...]
+            # Ground truth
+            gt = self.test[1][:, -1, ...]
+            # Test_pred dataset
+            test_input = self.test_pred[0][:, -1, ...]
+            test_label = self.test_pred[1][:, -1, ...]
 
-        # Construct a figure for the original and new frames.
-        fig, axes = plt.subplots(4, 5, figsize=(20, 20))
-        # Plot the original frames.
-        axes[0][2].set_title('Input')
-        for idx, ax in enumerate(axes[0]):
-            ax.imshow(np.squeeze(test_input[idx]), cmap="gray")
-            # ax.set_title(f"Sample {idx}")
-            ax.axis("off")
-        # Plot the new frames.
-        axes[1][2].set_title('Labels')
-        for idx, ax in enumerate(axes[1]):
-            ax.imshow(np.squeeze(test_label[idx]), cmap="gray")
-            # ax.set_title(f"Sample {idx}")
-            ax.axis("off")
-        axes[2][2].set_title('Output')
-        # Prediction
-        for idx, ax in enumerate(axes[2]):
-            ax.imshow(np.squeeze(pred[idx]), cmap="gray")
-            # ax.set_title(f"Sample {idx}")
-            ax.axis("off")
-        # Prediction binarize
-        axes[3][2].set_title('Output binarized')
-        for idx, ax in enumerate(axes[3]):
-            ax.imshow(np.squeeze(self.binarize_image(pred[idx])), cmap="gray")
-            # ax.set_title(f"Sample {idx}")
-            ax.axis("off")
-        # Save the figure
-        if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
-            os.makedirs(os.path.join(FIGURES_PATH, self.name))
-        save_path = os.path.join(FIGURES_PATH, self.name, 'raw_output')
-        plt.savefig(save_path, bbox_inches='tight')
-        plt.close(fig)
+            # Construct a figure for the original and new frames.
+            fig, axes = plt.subplots(4, 5, figsize=(20, 20))
+            # Plot the original frames.
+            axes[0][2].set_title('Input')
+            for idx, ax in enumerate(axes[0]):
+                ax.imshow(np.squeeze(test_input[idx]), cmap="gray")
+                # ax.set_title(f"Sample {idx}")
+                ax.axis("off")
+            # Plot the new frames.
+            axes[1][2].set_title('Labels')
+            for idx, ax in enumerate(axes[1]):
+                ax.imshow(np.squeeze(test_label[idx]), cmap="gray")
+                # ax.set_title(f"Sample {idx}")
+                ax.axis("off")
+            axes[2][2].set_title('Output')
+            # Prediction
+            for idx, ax in enumerate(axes[2]):
+                ax.imshow(np.squeeze(pred[idx]), cmap="gray")
+                # ax.set_title(f"Sample {idx}")
+                ax.axis("off")
+            # Prediction binarize
+            axes[3][2].set_title('Output binarized')
+            for idx, ax in enumerate(axes[3]):
+                ax.imshow(np.squeeze(self.binarize_image(pred[idx])), cmap="gray")
+                # ax.set_title(f"Sample {idx}")
+                ax.axis("off")
+            # Save the figure
+            if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
+                os.makedirs(os.path.join(FIGURES_PATH, self.name))
+            save_path = os.path.join(FIGURES_PATH, self.name, 'raw_output')
+            plt.savefig(save_path, bbox_inches='tight')
+            plt.close(fig)
 
-        # Figure for forecasting part of image
-        img_pred = self.extract_forecast_from_image(pred)
-        img_gt = self.extract_forecast_from_image(gt)
-        # Binarize the image
-        img_pred_bin = self.binarize_image(img_pred)
-        fig, axes = plt.subplots(2, 1, figsize=(15, 6))
-        plt.suptitle('Test set: ground truth vs prediction', fontsize=16)
-        # Ground Truth
-        axes[0].imshow(img_gt, cmap="gray")
-        axes[0].set_title('Ground truth')
-        axes[0].axis("off")
-        # Prediction
-        axes[1].imshow(img_pred_bin, cmap="gray")
-        axes[1].set_title('Prediction')
-        axes[1].axis("off")
-        save_path = os.path.join(FIGURES_PATH, self.name, 'gt_vs_pred')
-        plt.savefig(save_path, bbox_inches='tight')
-        plt.close(fig)
+            # Figure for forecasting part of image
+            img_pred = self.extract_forecast_from_image(pred)
+            img_gt = self.extract_forecast_from_image(gt)
+            # Binarize the image
+            img_pred_bin = self.binarize_image(img_pred)
+            fig, axes = plt.subplots(2, 1, figsize=(15, 6))
+            plt.suptitle('Test set: ground truth vs prediction', fontsize=16)
+            # Ground Truth
+            axes[0].imshow(img_gt, cmap="gray")
+            axes[0].set_title('Ground truth')
+            axes[0].axis("off")
+            # Prediction
+            axes[1].imshow(img_pred_bin, cmap="gray")
+            axes[1].set_title('Prediction')
+            axes[1].axis("off")
+            save_path = os.path.join(FIGURES_PATH, self.name, 'gt_vs_pred')
+            plt.savefig(save_path, bbox_inches='tight')
+            plt.close(fig)
 
-        # Figure with numeric data
-        pred_df_trf = self.image2series(img_pred, scaler)
-        # Test set
-        test_trf = scaler.inverse_transform(self.test_df)
-        test_df_trf = pd.DataFrame(data=test_trf, columns=self.test_df.columns, index=self.test_df.index)
+            # Figure with numeric data
+            pred_df_trf = self.image2series(img_pred, scaler)
+            # Test set
+            test_trf = scaler.inverse_transform(self.test_df)
+            test_df_trf = pd.DataFrame(data=test_trf, columns=self.test_df.columns, index=self.test_df.index)
+        else:
+            # Reshape
+            pred = np.reshape(pred, (-1, 1))
+            # Convert to dataframe
+            pred_df = pd.DataFrame(pred, columns=['CPU usage [MHZ]'])
+            pred_df.index = self.test_df.index
+            # Inverse transform
+            pred_trf = scaler.inverse_transform(pred_df)
+            pred_df_trf = pd.DataFrame(data=pred_trf, columns=['CPU usage [MHZ]'], index=self.test_df.index)
+            if self.classification is True:
+                pred_df_trf = pred_df
+            # Whole set
+            # Convert to dataframe
+            df_trf = scaler.inverse_transform(self.df)
+            df_df_trf = pd.DataFrame(data=df_trf, columns=self.df.columns, index=self.df.index)
+            # Test set
+            test_trf = scaler.inverse_transform(self.test_df)
+            test_df_trf = pd.DataFrame(data=test_trf, columns=self.test_df.columns, index=self.test_df.index)
+            val_mae = self.model.evaluate(self.val[0], self.val[1])
 
         # Figure forecast
         # Define default kwargs
@@ -605,7 +646,7 @@ def DiceLoss(y_true, y_pred, smooth=1e-6):
     y_true = K.flatten(y_true)
 
     intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
-    dice = (2. * intersection + smooth) / (K.sum(K.square(y_true),-1) + K.sum(K.square(y_pred),-1) + smooth)
+    dice = (2. * intersection + smooth) / (K.sum(K.square(y_true), -1) + K.sum(K.square(y_pred), -1) + smooth)
     return 1 - dice
 
 

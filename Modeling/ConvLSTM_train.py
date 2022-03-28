@@ -19,6 +19,9 @@ parser.add_argument('-f', '--frames', default=1,
 parser.add_argument('--label', default=16,
                     help='label_length')
 
+parser.add_argument('--numeric', type=bool, default=False,
+                    help='numeric problem')
+
 
 args = parser.parse_args()
 
@@ -28,6 +31,7 @@ NAME = args.name
 INPUT_LENGTH = int(args.input_length)
 LABEL_LENGTH = int(args.label)
 FRAMES = int(args.frames)
+NUMERIC = bool(args.numeric)
 
 if __name__ == "__main__":
     print('Pre-processing')
@@ -57,6 +61,7 @@ if __name__ == "__main__":
                                    test_df=test_df,
                                    epoch=EPOCH,
                                    model_path=None,
+                                   numeric=NUMERIC,
                                    )
 
     # Training
