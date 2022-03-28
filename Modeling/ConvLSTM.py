@@ -273,12 +273,12 @@ class ConvLSTMModel:
             data_format="channels_last",
         )(x)
         x = tf.keras.layers.Conv3D(
-            filters=1, kernel_size=(3, 3, 3), activation="sigmoid", padding="same",
+            filters=1, kernel_size=(3, 3, 3), activation="softmax", padding="same",
         )(x)
-        # Add layer for classification
-        x = tf.keras.layers.Conv2D(
-            1, 1, activation='softmax', padding='same'
-        )(x)
+        # # Add layer for classification
+        # x = tf.keras.layers.Conv2D(
+        #     1, 1, activation='softmax', padding='same'
+        # )(x)
 
         # Next, we will build the complete model and compile it.
         model = tf.keras.models.Model(inp, x)
