@@ -190,9 +190,9 @@ class ConvLSTMModel:
             labels.append(frames)
             frames = []
 
-        input = np.array(input)
+        input = np.array(input).astype(int)  # Change to int
         input = np.expand_dims(input, axis=4)
-        labels = np.array(labels)
+        labels = np.array(labels).astype(int)
         labels = np.expand_dims(labels, axis=4)
 
         return input, labels
@@ -279,7 +279,7 @@ class ConvLSTMModel:
         # Next, we will build the complete model and compile it.
         model = tf.keras.models.Model(inp, x)
         model.compile(
-            loss=DiceLoss,
+            loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
             optimizer=tf.keras.optimizers.Adam(),
             metrics=[tf.metrics.Accuracy(), tf.metrics.Precision(), tf.metrics.Recall()],
         )
