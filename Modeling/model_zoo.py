@@ -138,7 +138,7 @@ def get_model(ConvLSTMModel, name):
         # Define the Model Architecture.
 
         model.add(
-            tf.keras.layers.ConvLSTM2D(filters=8, kernel_size=(3, 3), activation='tanh', data_format="channels_last",
+            tf.keras.layers.ConvLSTM2D(filters=4, kernel_size=(3, 3), activation='tanh', data_format="channels_last",
                                        recurrent_dropout=0.2, return_sequences=True,
                                        input_shape=ConvLSTMModel.train[0].shape[1:]))
 
