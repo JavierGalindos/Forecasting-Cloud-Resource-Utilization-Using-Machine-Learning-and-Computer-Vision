@@ -43,7 +43,7 @@ Trains an ConvLSTM model using Keras and Tensorflow.
 
 To run:
 ```
-python ConvLSTM_train.py -e <number of epoch> -n <name of the model>  -i <input_length>   --label <labels length> -f <number of frames>
+python ConvLSTM_train.py -e <number of epoch> -m <model_name> -n <name of the model>  -i <input_length>   --label <labels length> -f <number of frames> 
 ```
 
 Example:

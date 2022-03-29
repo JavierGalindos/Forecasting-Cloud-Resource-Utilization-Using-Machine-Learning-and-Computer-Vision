@@ -7,6 +7,9 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-e', '--epoch', default=100,
                     help='number of epoch')
 
+parser.add_argument('-m', '--model_name', default='frame',
+                    help='model_name structure')
+
 parser.add_argument('-n', '--name', default='917/ConvLSTM',
                     help='name of the model')
 
@@ -27,6 +30,7 @@ args = parser.parse_args()
 
 
 EPOCH = int(args.epoch)
+MODEL_NAME = args.model_name
 NAME = args.name
 INPUT_LENGTH = int(args.input_length)
 LABEL_LENGTH = int(args.label)
@@ -55,6 +59,7 @@ if __name__ == "__main__":
                                    label_width=LABEL_LENGTH,
                                    n_frames=FRAMES,
                                    df=df,
+                                   model_name=MODEL_NAME,
                                    name=NAME,
                                    train_df=train_df,
                                    val_df=val_df,
@@ -69,7 +74,7 @@ if __name__ == "__main__":
     history = ConvLSTM_model.compile_and_fit()
     # Prediction
     print('Prediction:')
-    if NUMERIC is False:
+    if ConvLSTM_model.numeric is False:
         pred, img_pred, pred_df_trf = ConvLSTM_model.prediction(scaler)
     else:
         pred, pred_df_trf = ConvLSTM_model.prediction(scaler)

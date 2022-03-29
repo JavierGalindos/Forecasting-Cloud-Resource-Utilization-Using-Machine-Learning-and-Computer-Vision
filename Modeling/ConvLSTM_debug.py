@@ -21,19 +21,20 @@ if __name__ == '__main__':
     ConvLSTM_model = ConvLSTMModel(input_width=64,
                                    label_width=16,
                                    df=df,
+                                   model_name="frame",
                                    name='917/frames_8',
                                    train_df=train_df,
                                    val_df=val_df,
                                    test_df=test_df,
                                    epoch=50,
                                    batch_size=16,
-                                   model_path='./logs/ConvLSTM/917/frames_8/checkpoints/ConvLSTM_model_2022_03_25__16_50_02.hdf5',
+                                   # model_path='./logs/ConvLSTM/917/frames_8/checkpoints/ConvLSTM_model_2022_03_25__16_50_02.hdf5',
                                    n_frames=8,
                                    )
 
     # Training
     print('Training:')
-    # history = ConvLSTM_model.compile_and_fit()
+    history = ConvLSTM_model.compile_and_fit()
     # Prediction
     print('Prediction:')
     pred, img_pred, pred_df_trf = ConvLSTM_model.prediction(scaler)

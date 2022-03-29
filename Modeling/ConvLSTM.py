@@ -16,6 +16,7 @@ import cv2
 import random
 
 from DataExploration.BitbrainsUtils import *
+from model_zoo import get_model
 
 FIGURES_PATH = '../Figures/Modeling/ConvLSTM'
 
@@ -51,6 +52,7 @@ figsize = (8, 8)
 class ConvLSTMModel:
     def __init__(self, input_width, label_width, df,
                  train_df, val_df, test_df,
+                 model_name,
                  epoch=100, batch_size=16,
                  n_frames=1,
                  name='ConvLSTM',
@@ -68,6 +70,8 @@ class ConvLSTMModel:
         self.label_width = label_width
 
         # Hyper parameters.
+        self.model_name = model_name
+        self.model_path = model_path
         self.epoch = epoch
         self.batch_size = batch_size
         self.name = name
@@ -82,11 +86,6 @@ class ConvLSTMModel:
         self.train_time = 0
         self.inference_time = 0
         self.model_size = 0.
-
-        if model_path is not None:
-            self.model = tf.keras.models.load_model(model_path)
-        else:
-            self.model = self.get_model()
 
     @property
     def train(self):
@@ -243,75 +242,80 @@ class ConvLSTMModel:
             plt.close(fig)
             j += 1
 
-    def get_model(self):
-        tf.config.set_soft_device_placement(True)
-        # Construct the input layer with no definite frame size.
-        # inp = tf.keras.layers.Input(shape=(None, *self.train[0].shape[2:]))
-        inp = tf.keras.layers.Input(shape=self.train[0].shape[1:])
-
-        # We will construct 3 `ConvLSTM2D` layers with batch normalization,
-        # followed by a `Conv3D` layer for the spatiotemporal outputs.
-        x = tf.keras.layers.ConvLSTM2D(
-            filters=64,
-            kernel_size=(5, 5),
-            padding="same",
-            return_sequences=True,
-            activation="relu",
-            data_format="channels_last",
-        )(inp)
-        # x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
-        # x = tf.keras.layers.BatchNormalization()(x)
-        # x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
-        x = tf.keras.layers.ConvLSTM2D(
-            filters=64,
-            kernel_size=(3, 3),
-            padding="same",
-            return_sequences=True,
-            activation="relu",
-            data_format="channels_last",
-        )(x)
-        # x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
-        # x = tf.keras.layers.BatchNormalization()(x)
-        # x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
-        x = tf.keras.layers.ConvLSTM2D(
-            filters=64,
-            kernel_size=(1, 1),
-            padding="same",
-            return_sequences=True,
-            activation="relu",
-            data_format="channels_last",
-        )(x)
-        if self.numeric is False:
-            x = tf.keras.layers.Conv3D(
-                filters=1, kernel_size=(3, 3, 3), activation="sigmoid", padding="same",
-            )(x)
-        else:
-            x = tf.keras.layers.Flatten()(x)
-            if self.label_width == 1:
-                # Shape => [batch, time, features]
-                x = tf.keras.layers.Dense(units=1)(x)
-            else:
-                # Shape => [batch, 1, out_steps*features]
-                x = tf.keras.layers.Dense(units=self.label_width, kernel_initializer=tf.initializers.zeros())(x)
-                # Shape => [batch, out_steps, features]
-                x = tf.keras.layers.Reshape([self.label_width, 1])(x)
-
-        # Next, we will build the complete model and compile it.
-        model = tf.keras.models.Model(inp, x)
-        if self.numeric is False:
-            model.compile(
-                loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
-                optimizer=tf.keras.optimizers.Adam(),
-                metrics=tf.metrics.BinaryAccuracy(),
-            )
-        else:
-            model.compile(loss=tf.losses.MeanSquaredError(),
-                          optimizer=tf.optimizers.Adam(),
-                          metrics=tf.metrics.MeanAbsoluteError(),
-                          )
-        return model
+    # def get_model(self):
+    #     tf.config.set_soft_device_placement(True)
+    #     # Construct the input layer with no definite frame size.
+    #     # inp = tf.keras.layers.Input(shape=(None, *self.train[0].shape[2:]))
+    #     inp = tf.keras.layers.Input(shape=self.train[0].shape[1:])
+    #
+    #     # We will construct 3 `ConvLSTM2D` layers with batch normalization,
+    #     # followed by a `Conv3D` layer for the spatiotemporal outputs.
+    #     x = tf.keras.layers.ConvLSTM2D(
+    #         filters=64,
+    #         kernel_size=(5, 5),
+    #         padding="same",
+    #         return_sequences=True,
+    #         activation="relu",
+    #         data_format="channels_last",
+    #     )(inp)
+    #     # x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
+    #     # x = tf.keras.layers.BatchNormalization()(x)
+    #     # x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
+    #     x = tf.keras.layers.ConvLSTM2D(
+    #         filters=64,
+    #         kernel_size=(3, 3),
+    #         padding="same",
+    #         return_sequences=True,
+    #         activation="relu",
+    #         data_format="channels_last",
+    #     )(x)
+    #     # x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
+    #     # x = tf.keras.layers.BatchNormalization()(x)
+    #     # x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
+    #     x = tf.keras.layers.ConvLSTM2D(
+    #         filters=64,
+    #         kernel_size=(1, 1),
+    #         padding="same",
+    #         return_sequences=True,
+    #         activation="relu",
+    #         data_format="channels_last",
+    #     )(x)
+    #     if self.numeric is False:
+    #         x = tf.keras.layers.Conv3D(
+    #             filters=1, kernel_size=(3, 3, 3), activation="sigmoid", padding="same",
+    #         )(x)
+    #     else:
+    #         x = tf.keras.layers.Flatten()(x)
+    #         if self.label_width == 1:
+    #             # Shape => [batch, time, features]
+    #             x = tf.keras.layers.Dense(units=1)(x)
+    #         else:
+    #             # Shape => [batch, 1, out_steps*features]
+    #             x = tf.keras.layers.Dense(units=self.label_width, kernel_initializer=tf.initializers.zeros())(x)
+    #             # Shape => [batch, out_steps, features]
+    #             x = tf.keras.layers.Reshape([self.label_width, 1])(x)
+    #
+    #     # Next, we will build the complete model and compile it.
+    #     model = tf.keras.models.Model(inp, x)
+    #     if self.numeric is False:
+    #         model.compile(
+    #             loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
+    #             optimizer=tf.keras.optimizers.Adam(),
+    #             metrics=tf.metrics.BinaryAccuracy(),
+    #         )
+    #     else:
+    #         model.compile(loss=tf.losses.MeanSquaredError(),
+    #                       optimizer=tf.optimizers.Adam(),
+    #                       metrics=tf.metrics.MeanAbsoluteError(),
+    #                       )
+    #     return model
 
     def compile_and_fit(self):
+        # Load model
+        if self.model_path is not None:
+            self.model = tf.keras.models.load_model(self.model_path)
+        else:
+            self.model = get_model(self, self.model_name)
         # Early stopping
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                           patience=10,
@@ -320,7 +324,7 @@ class ConvLSTMModel:
 
         # Tensorboard
         # log_dir = f'logs/fit/{self.name}' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        log_dir = f'logs/ConvLSTM/{self.name}/tensorboard'
+        log_dir = f'logs/ConvLSTM/{self.model_name}/{self.name}/tensorboard'
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
         # Reduce learning rate on plateau
@@ -339,7 +343,7 @@ class ConvLSTMModel:
                                  self.train[1],
                                  epochs=self.epoch,
                                  batch_size=self.batch_size,
-                                 shuffle=False,
+                                 # shuffle=False,
                                  validation_data=(self.val[0], self.val[1]),
                                  callbacks=[early_stopping, tensorboard_callback, reduce_lr])
 
@@ -348,7 +352,7 @@ class ConvLSTMModel:
 
         # Save the best model (getting the best with early_stopping callback)
         # Check the path exists
-        model_filepath = f'logs/ConvLSTM/{self.name}/checkpoints'
+        model_filepath = f'logs/ConvLSTM/{self.model_name}/{self.name}/checkpoints'
         if not os.access(model_filepath, os.F_OK):
             os.makedirs(model_filepath)
         if not os.access(model_filepath, os.W_OK):
@@ -380,11 +384,14 @@ class ConvLSTMModel:
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Validation'], loc='upper right')
         # plt.show()
-        if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
-            os.makedirs(os.path.join(FIGURES_PATH, self.name))
-        save_path = os.path.join(FIGURES_PATH, self.name, 'Loss')
+        if not os.access(os.path.join(FIGURES_PATH, self.model_name, self.name), os.F_OK):
+            os.makedirs(os.path.join(FIGURES_PATH, self.model_name, self.name))
+        save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'Loss')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
+        # Save model structure
+        tf.keras.utils.plot_model(self.model, to_file=os.path.join(FIGURES_PATH, self.model_name, self.name, 'model_structure.png'),
+                                  show_shapes=True, show_layer_names=True)
         return history
 
     def prediction(self, scaler):
@@ -430,9 +437,9 @@ class ConvLSTMModel:
                 # ax.set_title(f"Sample {idx}")
                 ax.axis("off")
             # Save the figure
-            if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
-                os.makedirs(os.path.join(FIGURES_PATH, self.name))
-            save_path = os.path.join(FIGURES_PATH, self.name, 'raw_output')
+            if not os.access(os.path.join(FIGURES_PATH, self.model_name, self.name), os.F_OK):
+                os.makedirs(os.path.join(FIGURES_PATH, self.model_name, self.name))
+            save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'raw_output')
             plt.savefig(save_path, bbox_inches='tight')
             plt.close(fig)
 
@@ -497,7 +504,7 @@ class ConvLSTMModel:
         plt.title(f'Actual vs Forecast')
         plt.grid()
         plt.legend()
-        save_path = os.path.join(FIGURES_PATH, self.name, 'forecast')
+        save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'forecast')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
 
@@ -510,7 +517,7 @@ class ConvLSTMModel:
         plt.title(f'Actual vs Forecast (Zoom)')
         plt.grid()
         plt.legend()
-        save_path = os.path.join(FIGURES_PATH, self.name, 'forecast_zoom')
+        save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'forecast_zoom')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
 
@@ -538,7 +545,7 @@ class ConvLSTMModel:
         metrics = pd.DataFrame.from_dict(metrics_dic, orient='index')
         print(metrics)
         try:
-            filename = os.path.join('./logs/ConvLSTM', self.name, 'metrics.txt')
+            filename = os.path.join('./logs/ConvLSTM', self.model_name, self.name, 'metrics.txt')
             metrics.to_csv(filename)
         except:
             print("Unable to write to file")
@@ -561,13 +568,13 @@ class ConvLSTMModel:
         print(errors.describe())
         ax = sns.boxplot(data=errors).set(title='Errors box-plot',
                                           ylabel='Error')
-        if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
-            os.mkdir(os.path.join(FIGURES_PATH, self.name))
-        save_path = os.path.join(FIGURES_PATH, self.name, 'errors_boxplot')
+        if not os.access(os.path.join(FIGURES_PATH, self.model_name, self.name), os.F_OK):
+            os.mkdir(os.path.join(FIGURES_PATH, self.model_name, self.name))
+        save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'errors_boxplot')
         plt.savefig(save_path, bbox_inches='tight')
         # Save the errors
         try:
-            filename = os.path.join('./logs/ConvLSTM', self.name, 'errors.csv')
+            filename = os.path.join('./logs/ConvLSTM', self.model_name, self.name, 'errors.csv')
             errors.to_csv(filename)
         except:
             print("Unable to write to file")
