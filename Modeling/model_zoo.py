@@ -138,7 +138,7 @@ def get_model(ConvLSTMModel, name):
         # Define the Model Architecture.
 
         model.add(
-            tf.keras.layers.ConvLSTM2D(filters=4, kernel_size=(3, 3), activation='tanh', data_format="channels_last",
+            tf.keras.layers.ConvLSTM2D(filters=8, kernel_size=(3, 3), activation='tanh', data_format="channels_last",
                                        recurrent_dropout=0.2, return_sequences=True,
                                        input_shape=ConvLSTMModel.train[0].shape[1:]))
 
@@ -146,21 +146,21 @@ def get_model(ConvLSTMModel, name):
         model.add(tf.keras.layers.TimeDistributed(tf.keras.layers.Dropout(0.2)))
 
         model.add(
-            tf.keras.layers.ConvLSTM2D(filters=8, kernel_size=(3, 3), activation='tanh', data_format="channels_last",
-                                       recurrent_dropout=0.2, return_sequences=True))
-
-        model.add(tf.keras.layers.MaxPooling3D(pool_size=(1, 2, 2), padding='same', data_format='channels_last'))
-        model.add(tf.keras.layers.TimeDistributed(tf.keras.layers.Dropout(0.2)))
-
-        model.add(
-            tf.keras.layers.ConvLSTM2D(filters=14, kernel_size=(3, 3), activation='tanh', data_format="channels_last",
-                                       recurrent_dropout=0.2, return_sequences=True))
-
-        model.add(tf.keras.layers.MaxPooling3D(pool_size=(1, 2, 2), padding='same', data_format='channels_last'))
-        model.add(tf.keras.layers.TimeDistributed(tf.keras.layers.Dropout(0.2)))
-
-        model.add(
             tf.keras.layers.ConvLSTM2D(filters=16, kernel_size=(3, 3), activation='tanh', data_format="channels_last",
+                                       recurrent_dropout=0.2, return_sequences=True))
+
+        model.add(tf.keras.layers.MaxPooling3D(pool_size=(1, 2, 2), padding='same', data_format='channels_last'))
+        model.add(tf.keras.layers.TimeDistributed(tf.keras.layers.Dropout(0.2)))
+
+        model.add(
+            tf.keras.layers.ConvLSTM2D(filters=32, kernel_size=(3, 3), activation='tanh', data_format="channels_last",
+                                       recurrent_dropout=0.2, return_sequences=True))
+
+        model.add(tf.keras.layers.MaxPooling3D(pool_size=(1, 2, 2), padding='same', data_format='channels_last'))
+        model.add(tf.keras.layers.TimeDistributed(tf.keras.layers.Dropout(0.2)))
+
+        model.add(
+            tf.keras.layers.ConvLSTM2D(filters=64, kernel_size=(3, 3), activation='tanh', data_format="channels_last",
                                        recurrent_dropout=0.2, return_sequences=True))
 
         model.add(tf.keras.layers.MaxPooling3D(pool_size=(1, 2, 2), padding='same', data_format='channels_last'))
