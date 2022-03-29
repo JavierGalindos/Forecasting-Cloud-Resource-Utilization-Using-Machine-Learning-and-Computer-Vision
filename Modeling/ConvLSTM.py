@@ -242,74 +242,6 @@ class ConvLSTMModel:
             plt.close(fig)
             j += 1
 
-    # def get_model(self):
-    #     tf.config.set_soft_device_placement(True)
-    #     # Construct the input layer with no definite frame size.
-    #     # inp = tf.keras.layers.Input(shape=(None, *self.train[0].shape[2:]))
-    #     inp = tf.keras.layers.Input(shape=self.train[0].shape[1:])
-    #
-    #     # We will construct 3 `ConvLSTM2D` layers with batch normalization,
-    #     # followed by a `Conv3D` layer for the spatiotemporal outputs.
-    #     x = tf.keras.layers.ConvLSTM2D(
-    #         filters=64,
-    #         kernel_size=(5, 5),
-    #         padding="same",
-    #         return_sequences=True,
-    #         activation="relu",
-    #         data_format="channels_last",
-    #     )(inp)
-    #     # x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
-    #     # x = tf.keras.layers.BatchNormalization()(x)
-    #     # x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
-    #     x = tf.keras.layers.ConvLSTM2D(
-    #         filters=64,
-    #         kernel_size=(3, 3),
-    #         padding="same",
-    #         return_sequences=True,
-    #         activation="relu",
-    #         data_format="channels_last",
-    #     )(x)
-    #     # x = tf.keras.layers.Reshape([100, self.input_width, 64])(x)
-    #     # x = tf.keras.layers.BatchNormalization()(x)
-    #     # x = tf.keras.layers.Reshape([1, 100, self.input_width, 64])(x)
-    #     x = tf.keras.layers.ConvLSTM2D(
-    #         filters=64,
-    #         kernel_size=(1, 1),
-    #         padding="same",
-    #         return_sequences=True,
-    #         activation="relu",
-    #         data_format="channels_last",
-    #     )(x)
-    #     if self.numeric is False:
-    #         x = tf.keras.layers.Conv3D(
-    #             filters=1, kernel_size=(3, 3, 3), activation="sigmoid", padding="same",
-    #         )(x)
-    #     else:
-    #         x = tf.keras.layers.Flatten()(x)
-    #         if self.label_width == 1:
-    #             # Shape => [batch, time, features]
-    #             x = tf.keras.layers.Dense(units=1)(x)
-    #         else:
-    #             # Shape => [batch, 1, out_steps*features]
-    #             x = tf.keras.layers.Dense(units=self.label_width, kernel_initializer=tf.initializers.zeros())(x)
-    #             # Shape => [batch, out_steps, features]
-    #             x = tf.keras.layers.Reshape([self.label_width, 1])(x)
-    #
-    #     # Next, we will build the complete model and compile it.
-    #     model = tf.keras.models.Model(inp, x)
-    #     if self.numeric is False:
-    #         model.compile(
-    #             loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
-    #             optimizer=tf.keras.optimizers.Adam(),
-    #             metrics=tf.metrics.BinaryAccuracy(),
-    #         )
-    #     else:
-    #         model.compile(loss=tf.losses.MeanSquaredError(),
-    #                       optimizer=tf.optimizers.Adam(),
-    #                       metrics=tf.metrics.MeanAbsoluteError(),
-    #                       )
-    #     return model
-
     def compile_and_fit(self):
         # Load model
         if self.model_path is not None:
@@ -318,7 +250,7 @@ class ConvLSTMModel:
             self.model = get_model(self, self.model_name)
         # Early stopping
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                          patience=10,
+                                                          patience=15,
                                                           mode='min',
                                                           restore_best_weights=True)
 
@@ -328,7 +260,7 @@ class ConvLSTMModel:
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
         # Reduce learning rate on plateau
-        reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", patience=5)
+        reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", patience=10)
 
         print(f'Input shape (batch_size, num_frames, width, height, channels): {self.train[0].shape}')
         print(f'Labels shape (batch_size, num_frames, width, height, channels): {self.train[1].shape}')
