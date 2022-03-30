@@ -1,8 +1,8 @@
 #! /bin/bash
-python3 LSTM_train.py -e 100 -n '917/dropout_0' -s '917/dropout' --label 6 --dropout 0
-python3 LSTM_train.py -e 100 -n '917/dropout_01' -s '917/dropout' --label 6 --dropout 0.1
-python3 LSTM_train.py -e 100 -n '917/dropout_02' -s '917/dropout' --label 6 --dropout 0.2
-python3 LSTM_train.py -e 100 -n '917/dropout_04' -s '917/dropout' --label 6 --dropout 0.4
+python3 ConvLSTM_train.py -m 'LRCN' -n '917/frames_1' -i 64 --label 16 --frames 1
+python3 ConvLSTM_train.py -m 'LRCN' -n '917/frames_4' -i 64 --label 16 --frames 4
+python3 ConvLSTM_train.py -m 'LRCN' -n '917/frames_8' -i 64 --label 16 --frames 8
+python3 ConvLSTM_train.py -m 'LRCN' -n '917/frames_16' -i 64 --label 16 --frames 16
 
 
 
