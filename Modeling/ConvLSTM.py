@@ -181,7 +181,7 @@ class ConvLSTMModel:
             # Labels
             if self.numeric is False:
                 # j = n_frames + 1 (to save previous position and get next image
-                for j in range(0, self.n_frames):
+                if self.model_name == "video":
                     img = self.create_image_numpy(
                         data[(i + j * self.label_width + self.label_width):(
                                 i + j * self.label_width + self.input_width + self.label_width), :],
@@ -189,8 +189,19 @@ class ConvLSTMModel:
                     # Normalize image
                     img_normalized = img / 255.
                     frames.append(img_normalized)
-                labels.append(frames)
-                frames = []
+                    labels.append(frames)
+                    frames = []
+                else:
+                    for j in range(0, self.n_frames):
+                        img = self.create_image_numpy(
+                            data[(i + j * self.label_width + self.label_width):(
+                                    i + j * self.label_width + self.input_width + self.label_width), :],
+                            self.input_width, 100)
+                        # Normalize image
+                        img_normalized = img / 255.
+                        frames.append(img_normalized)
+                    labels.append(frames)
+                    frames = []
             else:
                 labels.append(data[(i + j * self.label_width + self.input_width):(
                         i + self.input_width + j * self.label_width + self.label_width), 0])

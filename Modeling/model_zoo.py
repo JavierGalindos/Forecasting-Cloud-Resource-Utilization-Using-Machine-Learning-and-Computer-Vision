@@ -185,6 +185,62 @@ def get_model(ConvLSTMModel, name):
                       optimizer=tf.optimizers.Adam(),
                       metrics=tf.metrics.MeanAbsoluteError(),
                       )
+
+    elif name == "video":
+        """
+        Video frame prediction
+        https://github.com/lukas/ml-class/tree/master/videos/video-predict
+        """
+        setattr(ConvLSTMModel, 'numeric', False)
+        inp = tf.keras.layers.Input(shape=ConvLSTMModel.train[0].shape[1:])
+        # Conv2DLSTM
+        c = 32
+
+        x = (tf.keras.layers.ConvLSTM2D(filters=c, kernel_size=(3, 3), padding='same', name='conv_lstm1',
+                                        return_sequences=True))(
+            inp)
+
+        c1 = (tf.keras.layers.BatchNormalization())(x)
+        x = tf.keras.layers.Dropout(0.2)(x)
+        x = (tf.keras.layers.TimeDistributed(tf.keras.layers.MaxPooling2D(pool_size=(2, 2))))(c1)
+
+        x = (tf.keras.layers.ConvLSTM2D(filters=2 * c, kernel_size=(3, 3), padding='same', name='conv_lstm3',
+                                        return_sequences=True))(x)
+        c2 = (tf.keras.layers.BatchNormalization())(x)
+        x = tf.keras.layers.Dropout(0.2)(x)
+
+        x = (tf.keras.layers.TimeDistributed(tf.keras.layers.MaxPooling2D(pool_size=(2, 2))))(c2)
+        x = (tf.keras.layers.ConvLSTM2D(filters=4 * c, kernel_size=(3, 3), padding='same', name='conv_lstm4',
+                                        return_sequences=True))(x)
+
+        x = (tf.keras.layers.TimeDistributed(tf.keras.layers.UpSampling2D(size=(2, 2))))(x)
+        x = (tf.keras.layers.ConvLSTM2D(filters=4 * c, kernel_size=(3, 3), padding='same', name='conv_lstm5',
+                                        return_sequences=True))(x)
+        x = (tf.keras.layers.BatchNormalization())(x)
+
+        x = (tf.keras.layers.ConvLSTM2D(filters=2 * c, kernel_size=(3, 3), padding='same', name='conv_lstm6',
+                                        return_sequences=True))(x)
+        x = (tf.keras.layers.BatchNormalization())(x)
+        x = tf.keras.layers.Add()([c2, x])
+        x = tf.keras.layers.Dropout(0.2)(x)
+
+        x = (tf.keras.layers.TimeDistributed(tf.keras.layers.UpSampling2D(size=(2, 2))))(x)
+        x = (tf.keras.layers.ConvLSTM2D(filters=c, kernel_size=(3, 3), padding='same', name='conv_lstm7',
+                                        return_sequences=False))(
+            x)
+        x = (tf.keras.layers.BatchNormalization())(x)
+        #         combined = concatenate([last_layer*0.20, x])
+        combined = x
+        combined = tf.keras.layers.Conv2D(1, (1, 1), activation="sigmoid", padding="same")(combined)
+        combined = tf.expand_dims(combined, axis=1)
+        model = tf.keras.models.Model(inputs=[inp], outputs=[combined])
+
+        # Compile
+        model.compile(loss=tf.losses.MeanSquaredError(),
+                      optimizer=tf.optimizers.Adam(),
+                      metrics=tf.metrics.MeanAbsoluteError(),
+                      )
+
     else:
         raise KeyError("{} model is unknown.".format(name))
 
