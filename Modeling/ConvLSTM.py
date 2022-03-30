@@ -401,7 +401,7 @@ class ConvLSTMModel:
             axes[1].imshow(img_pred_bin, cmap="gray")
             axes[1].set_title('Prediction')
             axes[1].axis("off")
-            save_path = os.path.join(FIGURES_PATH, self.name, 'gt_vs_pred')
+            save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'gt_vs_pred')
             plt.savefig(save_path, bbox_inches='tight')
             plt.close(fig)
 

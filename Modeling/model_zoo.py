@@ -183,7 +183,7 @@ def get_model(ConvLSTMModel, name):
         # Compile
         model.compile(loss=tf.losses.MeanSquaredError(),
                       optimizer=tf.optimizers.Adam(),
-                      metrics=tf.metrics.MeanAbsoluteError(),
+                      metrics=tf.metrics.BinaryAccuracy(),
                       )
 
     elif name == "video":
