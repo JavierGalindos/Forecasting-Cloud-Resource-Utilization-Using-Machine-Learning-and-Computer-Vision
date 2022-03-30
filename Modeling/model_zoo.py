@@ -183,7 +183,7 @@ def get_model(ConvLSTMModel, name):
         # Compile
         model.compile(loss=tf.losses.MeanSquaredError(),
                       optimizer=tf.optimizers.Adam(),
-                      metrics=tf.metrics.BinaryAccuracy(),
+                      metrics=tf.metrics.MeanAbsoluteError(),
                       )
 
     elif name == "video":
@@ -236,9 +236,9 @@ def get_model(ConvLSTMModel, name):
         model = tf.keras.models.Model(inputs=[inp], outputs=[combined])
 
         # Compile
-        model.compile(loss=tf.losses.MeanSquaredError(),
+        model.compile(loss=tf.losses.BinaryCrossentropy(),
                       optimizer=tf.optimizers.Adam(),
-                      metrics=tf.metrics.MeanAbsoluteError(),
+                      metrics=tf.metrics.BinaryAccuracy(),
                       )
 
     else:
