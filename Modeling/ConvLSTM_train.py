@@ -25,6 +25,9 @@ parser.add_argument('--label', default=16,
 parser.add_argument('--numeric', type=bool, default=False,
                     help='numeric problem')
 
+parser.add_argument('--VM', default=917,
+                    help='VM number')
+
 
 args = parser.parse_args()
 
@@ -36,12 +39,12 @@ INPUT_LENGTH = int(args.input_length)
 LABEL_LENGTH = int(args.label)
 FRAMES = int(args.frames)
 NUMERIC = bool(args.numeric)
+VM_NUM = int(args.VM)
 
 if __name__ == "__main__":
     print('Pre-processing')
     # Load data
-    VM_NUM = 917
-    VM = load_VM('917.csv')
+    VM = load_VM(f'{VM_NUM}.csv')
     # VM = load_VM('541.csv')
     # Make it univariate
     df = VM[['CPU usage [MHZ]']]
