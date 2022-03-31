@@ -14,6 +14,7 @@ import math
 import io
 import cv2
 import random
+from skimage.exposure import rescale_intensity
 
 from DataExploration.BitbrainsUtils import *
 from model_zoo import get_model
@@ -130,11 +131,12 @@ class ConvLSTMModel:
 
     @staticmethod
     def create_image_matplotlib(data):
-        global figsize, dpi
+        # Size = figsize*dpi = (100,64)
         # Input
-        fig = full_frame(figsize, dpi)
+        fig = full_frame(figsize=(16, 25), dpi=4)
+        plt.style.use('dark_background')
         plt.ylim(0, 1)  # set y-axis limits
-        plt.plot(data, ',', color='black')
+        plt.plot(data, '-', color='w')
         # Save images temporally in the buffer
         buf = io.BytesIO()
         plt.savefig(buf, format="png")
@@ -145,6 +147,7 @@ class ConvLSTMModel:
         plt.close(fig)
         # Read with OpenCV to get numpy array
         img = cv2.imdecode(img_arr, cv2.IMREAD_GRAYSCALE)
+        img = rescale_int(img)
         return img
 
     def create_dataset(self, data):
@@ -158,7 +161,7 @@ class ConvLSTMModel:
                     * self.label_width + self.input_width + self.label_width * (self.n_frames - 1),
                    :]
 
-        # Generate the images
+        # Generate the images (change between create_image_numpy and create_image_matplotlib)
         # Overlapping c=(input_width-label_width)/input_width
         # Input images (shift label with between samples)
         input = []
@@ -168,7 +171,7 @@ class ConvLSTMModel:
             # Input
             # Create n_frames images for the input. Always same overlapping
             for j in range(0, self.n_frames):
-                img = self.create_image_numpy(
+                img = self.create_image_matplotlib(
                     data[(i + j * self.label_width):(i + j * self.label_width + self.input_width), :], self.input_width,
                     100)
                 # Normalize image
@@ -182,7 +185,7 @@ class ConvLSTMModel:
             if self.numeric is False:
                 # j = n_frames + 1 (to save previous position and get next image
                 if self.model_name == "video":
-                    img = self.create_image_numpy(
+                    img = self.create_image_matplotlib(
                         data[(i + j * self.label_width + self.label_width):(
                                 i + j * self.label_width + self.input_width + self.label_width), :],
                         self.input_width, 100)
@@ -193,7 +196,7 @@ class ConvLSTMModel:
                     frames = []
                 else:
                     for j in range(0, self.n_frames):
-                        img = self.create_image_numpy(
+                        img = self.create_image_matplotlib(
                             data[(i + j * self.label_width + self.label_width):(
                                     i + j * self.label_width + self.input_width + self.label_width), :],
                             self.input_width, 100)
@@ -719,3 +722,8 @@ def DiceBCELoss(y_true, y_pred, smooth=1e-6):
     Dice_BCE = BCE + dice_loss
 
     return Dice_BCE
+
+
+def rescale_int(image: np.ndarray):
+    image = rescale_intensity(image, in_range=(0, 255))
+    return (image * 255).astype("uint8")

@@ -4,8 +4,8 @@ import pandas as pd
 
 # Constants
 LOGS_PATH = './logs/ConvLSTM/video/917'
-HP = 'frames'
-HP_NAME = 'frames'
+HP = 'input'
+HP_NAME = 'input'
 FIGURES_PATH = '../Figures/Modeling/ConvLSTM/video/917'
 if __name__ == "__main__":
     # List files
