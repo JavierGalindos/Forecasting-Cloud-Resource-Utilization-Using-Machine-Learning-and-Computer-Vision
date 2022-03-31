@@ -61,7 +61,7 @@ if __name__ == "__main__":
         metrics_cv_all = metrics_cv_all.T.reset_index()
         # Save in file
         try:
-            filename = os.path.join('logs', lstm_model.name, 'metrics_cv.txt')
+            filename = os.path.join('logs', lstm_model.name, 'metrics_cv.csv')
             metrics_cv_all.to_csv(filename)
         except:
             print("Unable to write to file")

@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Constants
-LOGS_PATH = './logs/ConvLSTM/LRCN/917'
+LOGS_PATH = './logs/ConvLSTM/video/917'
 HP = 'frames'
 HP_NAME = 'frames'
-FIGURES_PATH = '../Figures/Modeling/ConvLSTM/LRCN/917'
+FIGURES_PATH = '../Figures/Modeling/ConvLSTM/video/917'
 if __name__ == "__main__":
     # List files
     hp_list =[]
