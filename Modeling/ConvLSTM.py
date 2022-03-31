@@ -130,10 +130,10 @@ class ConvLSTMModel:
         return img
 
     @staticmethod
-    def create_image_matplotlib(data):
+    def create_image_matplotlib(data, width, height=100):
         # Size = figsize*dpi = (100,64)
         # Input
-        fig = full_frame(figsize=(16, 25), dpi=4)
+        fig = full_frame(figsize=(width, height), dpi=1)
         plt.style.use('dark_background')
         plt.ylim(0, 1)  # set y-axis limits
         plt.plot(data, '-', color='w')
