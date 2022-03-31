@@ -466,6 +466,15 @@ class ConvLSTMModel:
 
         # Figure GT vs prediction (test)
         # Dots
+        defaultKwargs = {'marker': 'o',
+                         'linestyle': '',
+                         'alpha': 0.8,
+                         'markersize': 2}
+        kwargs_forecast = {'marker': 'o',
+                           'linestyle': '',
+                           'alpha': 0.8,
+                           'markersize': 2,
+                           'color': 'tab:orange'}
         # Construct a figure for the original and new frames.
         fig, axes = plt.subplots(2, 1, figsize=(20, 7), sharex=True, sharey=True)
         plt.suptitle('Test set: GT vs prediction', fontsize=16)
@@ -485,11 +494,11 @@ class ConvLSTMModel:
         #Lines and dots
         defaultKwargs = {'marker': 'o',
                          'linestyle': '_',
-                         'alpha': 0.3,
+                         'alpha': 0.8,
                          'markersize': 2}
         kwargs_forecast = {'marker': 'o',
                            'linestyle': '_',
-                           'alpha': 0.5,
+                           'alpha': 0.8,
                            'markersize': 2,
                            'color': 'tab:orange'}
         # Construct a figure for the original and new frames.
@@ -510,6 +519,15 @@ class ConvLSTMModel:
 
         # Figure GT vs prediction (full)
         # Dots
+        defaultKwargs = {'marker': 'o',
+                         'linestyle': '',
+                         'alpha': 0.8,
+                         'markersize': 2}
+        kwargs_forecast = {'marker': 'o',
+                           'linestyle': '',
+                           'alpha': 0.8,
+                           'markersize': 2,
+                           'color': 'tab:orange'}
         # Construct a figure for the original and new frames.
         fig, axes = plt.subplots(2, 1, figsize=(20, 7), sharex=True, sharey=True)
         plt.suptitle('Test set: GT vs prediction', fontsize=16)
@@ -529,11 +547,11 @@ class ConvLSTMModel:
         # Lines and dots
         defaultKwargs = {'marker': 'o',
                          'linestyle': '_',
-                         'alpha': 0.3,
+                         'alpha': 0.8,
                          'markersize': 2}
         kwargs_forecast = {'marker': 'o',
                            'linestyle': '_',
-                           'alpha': 0.5,
+                           'alpha': 0.8,
                            'markersize': 2,
                            'color': 'tab:orange'}
         # Construct a figure for the original and new frames.
