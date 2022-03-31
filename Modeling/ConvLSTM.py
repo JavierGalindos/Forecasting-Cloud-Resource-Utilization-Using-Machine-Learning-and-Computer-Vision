@@ -468,11 +468,11 @@ class ConvLSTMModel:
         # Dots
         defaultKwargs = {'marker': 'o',
                          'linestyle': '',
-                         'alpha': 0.8,
+                         'alpha': 0.6,
                          'markersize': 2}
         kwargs_forecast = {'marker': 'o',
                            'linestyle': '',
-                           'alpha': 0.8,
+                           'alpha': 0.6,
                            'markersize': 2,
                            'color': 'tab:orange'}
         # Construct a figure for the original and new frames.
@@ -494,11 +494,11 @@ class ConvLSTMModel:
         #Lines and dots
         defaultKwargs = {'marker': 'o',
                          'linestyle': '-',
-                         'alpha': 0.8,
+                         'alpha': 0.6,
                          'markersize': 2}
         kwargs_forecast = {'marker': 'o',
                            'linestyle': '-',
-                           'alpha': 0.8,
+                           'alpha': 0.6,
                            'markersize': 2,
                            'color': 'tab:orange'}
         # Construct a figure for the original and new frames.
@@ -521,11 +521,11 @@ class ConvLSTMModel:
         # Dots
         defaultKwargs = {'marker': 'o',
                          'linestyle': '',
-                         'alpha': 0.8,
+                         'alpha': 0.6,
                          'markersize': 2}
         kwargs_forecast = {'marker': 'o',
                            'linestyle': '',
-                           'alpha': 0.8,
+                           'alpha': 0.6,
                            'markersize': 2,
                            'color': 'tab:orange'}
         # Construct a figure for the original and new frames.
@@ -547,11 +547,11 @@ class ConvLSTMModel:
         # Lines and dots
         defaultKwargs = {'marker': 'o',
                          'linestyle': '-',
-                         'alpha': 0.8,
+                         'alpha': 0.6,
                          'markersize': 2}
         kwargs_forecast = {'marker': 'o',
                            'linestyle': '-',
-                           'alpha': 0.8,
+                           'alpha': 0.6,
                            'markersize': 2,
                            'color': 'tab:orange'}
         # Construct a figure for the original and new frames.
