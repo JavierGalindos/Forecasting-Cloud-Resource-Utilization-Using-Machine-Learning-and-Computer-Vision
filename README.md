@@ -1,6 +1,6 @@
 # Predict Server Resource Utilization
 
-The methodology followed in this project is CRISP DM, very well in the Data Science community.
+The methodology followed in this project is CRISP DM, very well known in the Data Science community.
 <p align="center">
   <img width="200"src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/CRISP-DM_Process_Diagram.png/220px-CRISP-DM_Process_Diagram.png">
 </p>

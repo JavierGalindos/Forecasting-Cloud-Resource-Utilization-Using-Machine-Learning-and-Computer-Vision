@@ -493,11 +493,11 @@ class ConvLSTMModel:
 
         #Lines and dots
         defaultKwargs = {'marker': 'o',
-                         'linestyle': '_',
+                         'linestyle': '-',
                          'alpha': 0.8,
                          'markersize': 2}
         kwargs_forecast = {'marker': 'o',
-                           'linestyle': '_',
+                           'linestyle': '-',
                            'alpha': 0.8,
                            'markersize': 2,
                            'color': 'tab:orange'}
@@ -546,11 +546,11 @@ class ConvLSTMModel:
 
         # Lines and dots
         defaultKwargs = {'marker': 'o',
-                         'linestyle': '_',
+                         'linestyle': '-',
                          'alpha': 0.8,
                          'markersize': 2}
         kwargs_forecast = {'marker': 'o',
-                           'linestyle': '_',
+                           'linestyle': '-',
                            'alpha': 0.8,
                            'markersize': 2,
                            'color': 'tab:orange'}
