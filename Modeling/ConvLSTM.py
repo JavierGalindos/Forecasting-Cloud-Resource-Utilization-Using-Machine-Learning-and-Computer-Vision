@@ -464,6 +464,94 @@ class ConvLSTMModel:
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
 
+        # Figure GT vs prediction (test)
+        # Dots
+        # Construct a figure for the original and new frames.
+        fig, axes = plt.subplots(2, 1, figsize=(20, 7), sharex=True, sharey=True)
+        plt.suptitle('Test set: GT vs prediction', fontsize=16)
+        # Ground Truth
+        axes[0].plot(test_df_trf['CPU usage [MHZ]'], label='actual', color='k', **defaultKwargs)
+        axes[0].set_title('Ground truth')
+        axes[0].set_ylabel('CPU usage [MHz]')
+        # Prediction
+        axes[1].plot(pred_df_trf['CPU usage [MHZ]'], label='forecast', **kwargs_forecast)
+        axes[1].set_title('Prediction')
+        axes[1].set_ylabel('CPU usage [MHz]')
+        axes[1].set_xlabel('Time')
+        save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'gt_vs_pred_dots')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+        #Lines and dots
+        defaultKwargs = {'marker': 'o',
+                         'linestyle': '_',
+                         'alpha': 0.3,
+                         'markersize': 2}
+        kwargs_forecast = {'marker': 'o',
+                           'linestyle': '_',
+                           'alpha': 0.5,
+                           'markersize': 2,
+                           'color': 'tab:orange'}
+        # Construct a figure for the original and new frames.
+        fig, axes = plt.subplots(2, 1, figsize=(20, 7), sharex=True, sharey=True)
+        plt.suptitle('Test set: GT vs prediction', fontsize=16)
+        # Ground Truth
+        axes[0].plot(test_df_trf['CPU usage [MHZ]'], label='actual', color='k', **defaultKwargs)
+        axes[0].set_title('Ground truth')
+        axes[0].set_ylabel('CPU usage [MHz]')
+        # Prediction
+        axes[1].plot(pred_df_trf['CPU usage [MHZ]'], label='forecast', **kwargs_forecast)
+        axes[1].set_title('Prediction')
+        axes[1].set_ylabel('CPU usage [MHz]')
+        axes[1].set_xlabel('Time')
+        save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'gt_vs_pred_lines')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+        # Figure GT vs prediction (full)
+        # Dots
+        # Construct a figure for the original and new frames.
+        fig, axes = plt.subplots(2, 1, figsize=(20, 7), sharex=True, sharey=True)
+        plt.suptitle('Test set: GT vs prediction', fontsize=16)
+        # Ground Truth
+        axes[0].plot(self.df['CPU usage [MHZ]'], label='actual', color='k', **defaultKwargs)
+        axes[0].set_title('Ground truth')
+        axes[0].set_ylabel('CPU usage [MHz]')
+        # Prediction
+        axes[1].plot(pred_df_trf['CPU usage [MHZ]'], label='forecast', **kwargs_forecast)
+        axes[1].set_title('Prediction')
+        axes[1].set_ylabel('CPU usage [MHz]')
+        axes[1].set_xlabel('Time')
+        save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'gt_vs_pred_dots_full')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+        # Lines and dots
+        defaultKwargs = {'marker': 'o',
+                         'linestyle': '_',
+                         'alpha': 0.3,
+                         'markersize': 2}
+        kwargs_forecast = {'marker': 'o',
+                           'linestyle': '_',
+                           'alpha': 0.5,
+                           'markersize': 2,
+                           'color': 'tab:orange'}
+        # Construct a figure for the original and new frames.
+        fig, axes = plt.subplots(2, 1, figsize=(20, 7), sharex=True, sharey=True)
+        plt.suptitle('Test set: GT vs prediction', fontsize=16)
+        # Ground Truth
+        axes[0].plot(self.df['CPU usage [MHZ]'], label='actual', color='k', **defaultKwargs)
+        axes[0].set_title('Ground truth')
+        axes[0].set_ylabel('CPU usage [MHz]')
+        # Prediction
+        axes[1].plot(pred_df_trf['CPU usage [MHZ]'], label='forecast', **kwargs_forecast)
+        axes[1].set_title('Prediction')
+        axes[1].set_ylabel('CPU usage [MHz]')
+        axes[1].set_xlabel('Time')
+        save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'gt_vs_pred_lines_full')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
         if self.numeric is False:
             return pred, img_pred_bin, pred_df_trf
         else:
