@@ -274,7 +274,7 @@ class ConvLSTMModel:
             self.model = get_model(self, self.model_name)
         # Early stopping
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                          patience=15,
+                                                          patience=20,
                                                           mode='min',
                                                           restore_best_weights=True)
 
@@ -284,7 +284,7 @@ class ConvLSTMModel:
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
         # Reduce learning rate on plateau
-        reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", patience=10)
+        reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", patience=15)
 
         print("Shapes:")
         print(f'Input shape (batch_size, num_frames, width, height, channels): {self.train[0].shape}')
@@ -738,3 +738,10 @@ def DiceBCELoss(y_true, y_pred, smooth=1e-6):
 def rescale_int(image: np.ndarray):
     image = rescale_intensity(image, in_range=(0, 255))
     return (image * 255).astype("uint8")
+
+
+def synthetic_dataset(df, freq):
+    t = np.arange(0, len(df))
+    amplitude = np.sin(2*np.pi*freq*t)
+    df['CPU usage [MHZ]'] = amplitude
+    return df

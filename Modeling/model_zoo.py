@@ -280,7 +280,7 @@ def get_model(ConvLSTMModel, name):
         model = tf.keras.Model(inp, decoded)
 
         # Compile
-        model.compile(loss=tf.keras.losses.KLDivergence(),
+        model.compile(loss=tf.losses.BinaryCrossentropy(),
                       optimizer=tf.optimizers.Adam(),
                       metrics=tf.metrics.BinaryAccuracy(),
                       )

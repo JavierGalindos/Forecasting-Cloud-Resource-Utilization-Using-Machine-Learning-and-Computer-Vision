@@ -53,6 +53,9 @@ if __name__ == "__main__":
     # Make it univariate
     df = VM[['CPU usage [MHZ]']]
 
+    # Make data sythetic
+    df = synthetic_dataset(df, 1/288)
+
     # Split the data
     # (70%, 20%, 10%) split for the training, validation, and test sets
     train_df, val_df, test_df = split_data(df)
