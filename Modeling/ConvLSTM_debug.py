@@ -21,7 +21,7 @@ if __name__ == '__main__':
     ConvLSTM_model = ConvLSTMModel(input_width=64,
                                    label_width=16,
                                    df=df,
-                                   model_name="frame",
+                                   model_name="AE",
                                    name='917/frames_8',
                                    train_df=train_df,
                                    val_df=val_df,
@@ -29,7 +29,7 @@ if __name__ == '__main__':
                                    epoch=50,
                                    batch_size=16,
                                    # model_path='./logs/ConvLSTM/917/frames_8/checkpoints/ConvLSTM_model_2022_03_25__16_50_02.hdf5',
-                                   n_frames=8,
+                                   n_frames=1,
                                    )
 
     # Training

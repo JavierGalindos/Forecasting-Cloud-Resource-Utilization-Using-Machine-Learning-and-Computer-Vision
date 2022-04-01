@@ -241,6 +241,50 @@ def get_model(ConvLSTMModel, name):
                       metrics=tf.metrics.BinaryAccuracy(),
                       )
 
+    elif name == "AE":
+        """
+        JP Morgan paper: Visual Time Series Forecasting: An Image-driven Approach
+        https://arxiv.org/abs/2107.01273
+        """
+        latent_dim = 64
+        setattr(ConvLSTMModel, 'numeric', False)
+        setattr(ConvLSTMModel, 'frames', 1)
+        inp = tf.keras.layers.Input(shape=ConvLSTMModel.train[0].shape[1:])
+
+        x = tf.keras.layers.Reshape(target_shape=ConvLSTMModel.train[0].shape[2:])(inp)
+        x = tf.keras.layers.Conv2D(128, (5, 5), activation='relu', padding='same', strides=2)(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        # x = tf.keras.layers.MaxPooling2D((2, 2), padding='same')(x)
+        x = tf.keras.layers.Conv2D(256, (5, 5), activation='relu', padding='same', strides=2)(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        # x = tf.keras.layers.MaxPooling2D((2, 2), padding='same')(x)
+        # x = tf.keras.layers.Conv2D(512, (5, 5), activation='relu', padding='same', strides=2)(x)
+        # x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Flatten()(x)
+        encoded = tf.keras.layers.Dense(latent_dim)(x)
+
+        # at this point the representation is 512-dimensional
+
+        # Units = width*length*filters
+        x = tf.keras.layers.Dense(25*16*256, activation='relu')(encoded)
+        x = tf.keras.layers.Reshape([25, 16, 256])(x)
+        # x = tf.keras.layers.Conv2DTranspose(512, (5, 5), activation='relu', padding='same', strides=2)(x)
+        # x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Conv2DTranspose(256, (5, 5), activation='relu', padding='same', strides=2)(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Conv2DTranspose(128, (5, 5), activation='relu', padding='same', strides=2)(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        decoded = tf.keras.layers.Conv2D(1, (5, 5), activation='sigmoid', padding='same')(x)
+        decoded = tf.keras.layers.Reshape(target_shape=ConvLSTMModel.train[1].shape[1:])(decoded)
+
+        model = tf.keras.Model(inp, decoded)
+
+        # Compile
+        model.compile(loss=tf.losses.BinaryCrossentropy(),
+                      optimizer=tf.optimizers.Adam(),
+                      metrics=tf.metrics.BinaryAccuracy(),
+                      )
+
     else:
         raise KeyError("{} model is unknown.".format(name))
 
