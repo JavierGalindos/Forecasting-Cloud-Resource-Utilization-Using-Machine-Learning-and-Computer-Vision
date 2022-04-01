@@ -28,6 +28,9 @@ parser.add_argument('--numeric', type=bool, default=False,
 parser.add_argument('--VM', default=917,
                     help='VM number')
 
+parser.add_argument('--overlapping', default=None,
+                    help='Overlapping (0-1)')
+
 
 args = parser.parse_args()
 
@@ -40,6 +43,7 @@ LABEL_LENGTH = int(args.label)
 FRAMES = int(args.frames)
 NUMERIC = bool(args.numeric)
 VM_NUM = int(args.VM)
+OVERLAPPING = float(args.overlappping)
 
 if __name__ == "__main__":
     print('Pre-processing')
@@ -70,6 +74,7 @@ if __name__ == "__main__":
                                    epoch=EPOCH,
                                    model_path=None,
                                    numeric=NUMERIC,
+                                   overlapping=OVERLAPPING,
                                    )
 
     # Training
