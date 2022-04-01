@@ -745,3 +745,12 @@ def synthetic_dataset(df, freq):
     amplitude = np.sin(2*np.pi*freq*t)
     df['CPU usage [MHZ]'] = amplitude
     return df
+
+
+def synthetic_dataset_black(df, freq):
+    time = np.arange(0, len(df))
+    amplitude = np.sin(2*np.pi*freq*time)
+    amplitude[0] = -4
+    amplitude[len(df)-1] = 4
+    df['CPU usage [MHZ]'] = amplitude
+    return df

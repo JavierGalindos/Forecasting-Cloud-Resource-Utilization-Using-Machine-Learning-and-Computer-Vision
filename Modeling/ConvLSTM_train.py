@@ -54,7 +54,7 @@ if __name__ == "__main__":
     df = VM[['CPU usage [MHZ]']]
 
     # Make data sythetic
-    df = synthetic_dataset(df, 1/25)
+    df = synthetic_dataset_black(df, 1/25)
 
     # Split the data
     # (70%, 20%, 10%) split for the training, validation, and test sets
