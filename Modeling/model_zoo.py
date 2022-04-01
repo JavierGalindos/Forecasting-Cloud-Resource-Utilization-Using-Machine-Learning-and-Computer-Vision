@@ -236,7 +236,7 @@ def get_model(ConvLSTMModel, name):
         model = tf.keras.models.Model(inputs=[inp], outputs=[combined])
 
         # Compile
-        model.compile(loss=tf.losses.MeanSquaredError(),
+        model.compile(loss=tf.losses.BinaryCrossentropy(),
                       optimizer=tf.optimizers.Adam(),
                       metrics=tf.metrics.BinaryAccuracy(),
                       )
