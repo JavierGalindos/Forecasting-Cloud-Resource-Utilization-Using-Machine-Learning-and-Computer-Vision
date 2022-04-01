@@ -43,7 +43,7 @@ LABEL_LENGTH = int(args.label)
 FRAMES = int(args.frames)
 NUMERIC = bool(args.numeric)
 VM_NUM = int(args.VM)
-OVERLAPPING = float(args.overlapping)
+OVERLAPPING = args.overlapping
 
 if __name__ == "__main__":
     print('Pre-processing')
