@@ -59,6 +59,7 @@ class ConvLSTMModel:
                  name='ConvLSTM',
                  model_path=None,
                  numeric=False,
+                 overlapping=None,
                  ):
         # Store the raw data.
         self.df = df
@@ -69,6 +70,7 @@ class ConvLSTMModel:
         # Window parameters.
         self.input_width = input_width
         self.label_width = label_width
+        self.overlapping = overlapping
 
         # Hyper parameters.
         self.model_name = model_name
@@ -87,6 +89,11 @@ class ConvLSTMModel:
         self.train_time = 0
         self.inference_time = 0
         self.model_size = 0.
+
+        # Add overlapping as parameters
+        # Forecasting horizon = (1 - overlapping)* input = input - overlaping*input
+        if self.overlapping is not None:
+            self.label_width = self.input_width - int(overlapping*self.input_width)
 
     @property
     def train(self):
@@ -133,10 +140,10 @@ class ConvLSTMModel:
     def create_image_matplotlib(data, width, height=100):
         # Size = figsize*dpi = (100,64)
         # Input
-        fig = full_frame(figsize=(width, height), dpi=1)
-        plt.style.use('dark_background')
+        fig = full_frame(figsize=(width/100, height/100), dpi=100)
+        # plt.style.use('dark_background')
         plt.ylim(0, 1)  # set y-axis limits
-        plt.plot(data, '-', color='w')
+        plt.plot(data, '-', color='black', linewidth=0.1)
         # Save images temporally in the buffer
         buf = io.BytesIO()
         plt.savefig(buf, format="png")
@@ -147,7 +154,8 @@ class ConvLSTMModel:
         plt.close(fig)
         # Read with OpenCV to get numpy array
         img = cv2.imdecode(img_arr, cv2.IMREAD_GRAYSCALE)
-        img = rescale_int(img)
+        # img = rescale_int(img)
+        img = 255 - img
         return img
 
     def create_dataset(self, data):
@@ -209,10 +217,12 @@ class ConvLSTMModel:
                 labels.append(data[(i + j * self.label_width + self.input_width):(
                         i + self.input_width + j * self.label_width + self.label_width), 0])
 
-        input = np.array(input).astype(int)  # Change to int
+        # input = np.array(input).astype(int)  # Change to int
+        input = np.array(input)
         input = np.expand_dims(input, axis=4)
         if self.numeric is False:
-            labels = np.array(labels).astype(int)
+            # labels = np.array(labels).astype(int)
+            labels = np.array(labels)
             labels = np.expand_dims(labels, axis=4)
         else:
             labels = np.array(labels).reshape((-1, self.label_width, 1))
@@ -276,6 +286,7 @@ class ConvLSTMModel:
         # Reduce learning rate on plateau
         reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", patience=10)
 
+        print("Shapes:")
         print(f'Input shape (batch_size, num_frames, width, height, channels): {self.train[0].shape}')
         print(f'Labels shape (batch_size, num_frames, width, height, channels): {self.train[1].shape}')
         # print(f'Output shape:{self.model(self.train[0]).shape}')
