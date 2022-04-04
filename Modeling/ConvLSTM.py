@@ -54,6 +54,7 @@ class ConvLSTMModel:
     def __init__(self, input_width, label_width, df,
                  train_df, val_df, test_df,
                  model_name,
+                 image_width=None,
                  epoch=100, batch_size=16,
                  n_frames=1,
                  name='ConvLSTM',
@@ -71,6 +72,13 @@ class ConvLSTMModel:
         self.input_width = input_width
         self.label_width = label_width
         self.overlapping = overlapping
+        # Adapt to image_width different to input_width
+        if image_width is None:
+            self.image_width = self.input_width
+        else:
+            self.image_width = image_width
+        # Ratio between image_with and input_width
+        self.ratio = int(self.image_width / self.input_width)
 
         # Hyper parameters.
         self.model_name = model_name
@@ -91,9 +99,9 @@ class ConvLSTMModel:
         self.model_size = 0.
 
         # Add overlapping as parameters
-        # Forecasting horizon = (1 - overlapping)* input = input - overlaping*input
+        # Forecasting horizon = (1 - overlapping)* input = input - overlapping*input
         if self.overlapping is not None:
-            self.label_width = self.input_width - int(overlapping*self.input_width)
+            self.label_width = self.input_width - int(overlapping * self.input_width)
 
     @property
     def train(self):
@@ -122,8 +130,9 @@ class ConvLSTMModel:
             self._example = result
         return result
 
-    @staticmethod
-    def create_image_numpy(data, width, height=100):
+    def create_image_numpy(self, data, width, height=100):
+        if self.ratio != 1:
+            assert "Do not use create_image_numpy if ratio > 1"
         data = np.squeeze(data)
         # Get the height of each column (0-100)
         level = np.round(data * 100)
@@ -140,10 +149,10 @@ class ConvLSTMModel:
     def create_image_matplotlib(data, width, height=100):
         # Size = figsize*dpi = (100,64)
         # Input
-        fig = full_frame(figsize=(width/100, height/100), dpi=100)
+        fig = full_frame(figsize=(width / 100, height / 100), dpi=100)
         # plt.style.use('dark_background')
         plt.ylim(0, 1)  # set y-axis limits
-        plt.plot(data, '-', color='black', linewidth=0.1)
+        plt.plot(data, ',', color='black', linewidth=0.1)
         # Save images temporally in the buffer
         buf = io.BytesIO()
         plt.savefig(buf, format="png")
@@ -180,7 +189,7 @@ class ConvLSTMModel:
             # Create n_frames images for the input. Always same overlapping
             for j in range(0, self.n_frames):
                 img = self.create_image_matplotlib(
-                    data[(i + j * self.label_width):(i + j * self.label_width + self.input_width), :], self.input_width,
+                    data[(i + j * self.label_width):(i + j * self.label_width + self.input_width), :], self.image_width,
                     100)
                 # Normalize image
                 img_normalized = img / 255.
@@ -196,7 +205,7 @@ class ConvLSTMModel:
                     img = self.create_image_matplotlib(
                         data[(i + j * self.label_width + self.label_width):(
                                 i + j * self.label_width + self.input_width + self.label_width), :],
-                        self.input_width, 100)
+                        self.image_width, 100)
                     # Normalize image
                     img_normalized = img / 255.
                     frames.append(img_normalized)
@@ -207,7 +216,7 @@ class ConvLSTMModel:
                         img = self.create_image_matplotlib(
                             data[(i + j * self.label_width + self.label_width):(
                                     i + j * self.label_width + self.input_width + self.label_width), :],
-                            self.input_width, 100)
+                            self.image_width, 100)
                         # Normalize image
                         img_normalized = img / 255.
                         frames.append(img_normalized)
@@ -347,7 +356,8 @@ class ConvLSTMModel:
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
         # Save model structure
-        tf.keras.utils.plot_model(self.model, to_file=os.path.join(FIGURES_PATH, self.model_name, self.name, 'model_structure.png'),
+        tf.keras.utils.plot_model(self.model,
+                                  to_file=os.path.join(FIGURES_PATH, self.model_name, self.name, 'model_structure.png'),
                                   show_shapes=True, show_layer_names=True)
         return history
 
@@ -432,7 +442,8 @@ class ConvLSTMModel:
             pred_df.index = self.test_df.index[:len(pred_df)]
             # Inverse transform
             pred_trf = scaler.inverse_transform(pred_df)
-            pred_df_trf = pd.DataFrame(data=pred_trf, columns=['CPU usage [MHZ]'], index=self.test_df.index[:len(pred_df)])
+            pred_df_trf = pd.DataFrame(data=pred_trf, columns=['CPU usage [MHZ]'],
+                                       index=self.test_df.index[:len(pred_df)])
             # Whole set
             # Convert to dataframe
             df_trf = scaler.inverse_transform(self.df)
@@ -505,7 +516,7 @@ class ConvLSTMModel:
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
 
-        #Lines and dots
+        # Lines and dots
         defaultKwargs = {'marker': 'o',
                          'linestyle': '-',
                          'alpha': 0.6,
@@ -550,7 +561,7 @@ class ConvLSTMModel:
         axes[0].set_title('Ground truth')
         axes[0].set_ylabel('CPU usage [MHz]')
         # Prediction
-        axes[1].plot(self.df.iloc[:(len(self.df)-len(pred_df_trf)), 0], label='actual', color='k', **defaultKwargs)
+        axes[1].plot(self.df.iloc[:(len(self.df) - len(pred_df_trf)), 0], label='actual', color='k', **defaultKwargs)
         axes[1].plot(pred_df_trf['CPU usage [MHZ]'], label='forecast', **kwargs_forecast)
         axes[1].set_title('Prediction')
         axes[1].set_ylabel('CPU usage [MHz]')
@@ -667,7 +678,11 @@ class ConvLSTMModel:
         # Shape (frame, height, width)
         img_pred = []
         for i in range(pred.shape[0]):
-            img_pred.append(pred[i, :, -self.label_width:])
+            # Adapt to ratio > 1 (see meaning of ratio in init)
+            if self.ratio == 1:
+                img_pred.append(pred[i, :, -self.label_width:])
+            else:
+                img_pred.append(pred[i, :, -int(self.label_width / self.ratio):])
         img_pred = np.concatenate(img_pred, axis=1)
         return img_pred
 
@@ -677,6 +692,10 @@ class ConvLSTMModel:
         # Numeric (undo preprocessing)
         pred_numeric = 100 - 1 - idx
         pred_numeric = pred_numeric / 100
+
+        # Do the mapping if ratio > 1 (see meaning of ratio in init)
+        if self.ratio != 1:
+            pred_numeric = self.mapping(pred_numeric)
 
         # Check if the prediction is longer than the test set (then trim it)
         if len(pred_numeric) > len(self.test_df):
@@ -690,6 +709,15 @@ class ConvLSTMModel:
         pred_df_trf = pd.DataFrame(data=pred_trf, columns=['CPU usage [MHZ]'], index=pred_df.index)
         # pred_df_trf = pred_df_trf.shift(periods=-self.label_width)
         return pred_df_trf
+
+    def mapping(self, pred_numeric):
+        pred_map = []
+        for i in range(len(pred_numeric)):
+            # Repeat the value ratio times to map it
+            for _ in range(self.ratio):
+                pred_map.append(pred_numeric[i])
+        pred_map = np.array(pred_map)
+        return pred_map
 
 
 def full_frame(figsize=(8.0, 8.0), dpi=8):
@@ -746,14 +774,14 @@ def rescale_int(image: np.ndarray):
 
 def synthetic_dataset(df, freq):
     t = np.arange(0, len(df))
-    amplitude = np.sin(2*np.pi*freq*t)
+    amplitude = np.sin(2 * np.pi * freq * t)
     df['CPU usage [MHZ]'] = amplitude
     return df
 
 
 def synthetic_dataset_black(df, freq):
     time = np.arange(0, len(df))
-    amplitude = np.sin(2*np.pi*freq*time)
+    amplitude = np.sin(2 * np.pi * freq * time)
     amplitude[0] = -5
     amplitude[100] = 5
     df['CPU usage [MHZ]'] = amplitude

@@ -18,15 +18,16 @@ if __name__ == '__main__':
     train_df, val_df, test_df = data_transformation(scaler, train_df, val_df, test_df)
 
     # Model
-    ConvLSTM_model = ConvLSTMModel(input_width=64,
+    ConvLSTM_model = ConvLSTMModel(input_width=288,
                                    label_width=16,
                                    df=df,
+                                   image_width=64,
                                    model_name="AE",
-                                   name='917/frames_8',
+                                   name='917/input_288_img_64',
                                    train_df=train_df,
                                    val_df=val_df,
                                    test_df=test_df,
-                                   epoch=50,
+                                   epoch=1,
                                    batch_size=16,
                                    # model_path='./logs/ConvLSTM/917/frames_8/checkpoints/ConvLSTM_model_2022_03_25__16_50_02.hdf5',
                                    n_frames=1,

@@ -31,6 +31,9 @@ parser.add_argument('--VM', default=917,
 parser.add_argument('--overlapping', default=None,
                     help='Overlapping (0-1)')
 
+parser.add_argument('--img_width', default=None,
+                    help='Image width (multiple of input_width)')
+
 
 args = parser.parse_args()
 
@@ -44,6 +47,7 @@ FRAMES = int(args.frames)
 NUMERIC = bool(args.numeric)
 VM_NUM = int(args.VM)
 OVERLAPPING = args.overlapping
+IMAGE_WIDTH = int(args.img_width)
 
 if __name__ == "__main__":
     print('Pre-processing')
@@ -69,6 +73,7 @@ if __name__ == "__main__":
                                    label_width=LABEL_LENGTH,
                                    n_frames=FRAMES,
                                    df=df,
+                                   image_width=IMAGE_WIDTH,
                                    model_name=MODEL_NAME,
                                    name=NAME,
                                    train_df=train_df,
