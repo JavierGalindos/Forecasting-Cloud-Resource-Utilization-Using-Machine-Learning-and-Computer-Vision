@@ -78,7 +78,7 @@ class ConvLSTMModel:
         else:
             self.image_width = image_width
         # Ratio between image_with and input_width
-        self.ratio = int(self.image_width / self.input_width)
+        self.ratio = int(self.input_width / self.image_width)
 
         # Hyper parameters.
         self.model_name = model_name
