@@ -266,8 +266,8 @@ def get_model(ConvLSTMModel, name):
         # at this point the representation is 512-dimensional
 
         # Units = width*length*filters
-        x = tf.keras.layers.Dense(ConvLSTMModel.train[0].shape[2]*ConvLSTMModel.train[0].shape[3]*256, activation='relu')(encoded)
-        x = tf.keras.layers.Reshape([ConvLSTMModel.train[0].shape[2], ConvLSTMModel.train[0].shape[3], 256])(x)
+        x = tf.keras.layers.Dense((ConvLSTMModel.train[0].shape[2]/4)*(ConvLSTMModel.train[0].shape[3]/4)*256, activation='relu')(encoded)
+        x = tf.keras.layers.Reshape([(ConvLSTMModel.train[0].shape[2]/4), (ConvLSTMModel.train[0].shape[3]/4), 256])(x)
         # x = tf.keras.layers.Conv2DTranspose(512, (5, 5), activation='relu', padding='same', strides=2)(x)
         # x = tf.keras.layers.BatchNormalization()(x)
         x = tf.keras.layers.Conv2DTranspose(256, (5, 5), activation='relu', padding='same', strides=2)(x)
