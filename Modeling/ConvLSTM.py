@@ -152,7 +152,7 @@ class ConvLSTMModel:
         fig = full_frame(figsize=(width / 100, height / 100), dpi=100)
         # plt.style.use('dark_background')
         plt.ylim(0, 1)  # set y-axis limits
-        plt.plot(data, '-', color='black', linewidth=0.1)
+        plt.plot(data, ',', color='black', linewidth=0.1)
         # Save images temporally in the buffer
         buf = io.BytesIO()
         plt.savefig(buf, format="png")

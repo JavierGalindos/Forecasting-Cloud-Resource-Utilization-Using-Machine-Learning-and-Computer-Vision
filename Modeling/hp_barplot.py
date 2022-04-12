@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Constants
-LOGS_PATH = './logs/ConvLSTM/AE/917/Barplot'
+LOGS_PATH = './logs/ConvLSTM/AE/917'
 HP = 'image'
 HP_NAME = 'image'
 FIGURES_PATH = '../Figures/Modeling/ConvLSTM/AE/917'
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     plt.title(f'Hyperparameter: {HP_NAME}')
     if not os.access(os.path.join(FIGURES_PATH, HP_NAME), os.F_OK):
         os.mkdir(os.path.join(FIGURES_PATH, HP_NAME))
-    save_path = os.path.join(FIGURES_PATH, HP_NAME, 'IoU')
+    save_path = os.path.join(FIGURES_PATH, HP_NAME, 'DTW')
     plt.savefig(save_path, bbox_inches='tight')
     plt.close(fig)
 
