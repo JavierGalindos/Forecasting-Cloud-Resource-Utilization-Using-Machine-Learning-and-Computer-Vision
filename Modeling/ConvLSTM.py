@@ -624,6 +624,7 @@ class ConvLSTMModel:
                        'model_size [B]': self.model_size,
                        'IoU': columnIoU(img_pred, img_gt, 1),
                        'DTW': dtw(y_true, y_pred),
+                       'forecasting horizon': self.label_width,
                        }
 
         # Save metrics
