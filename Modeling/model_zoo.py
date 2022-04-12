@@ -263,7 +263,7 @@ def get_model(ConvLSTMModel, name):
         x = tf.keras.layers.Flatten()(x)
         encoded = tf.keras.layers.Dense(latent_dim)(x)
 
-        # at this point the representation is 512-dimensional
+        # at this point the representation is latent_dim-dimensional
 
         # Units = width*length*filters
         x = tf.keras.layers.Dense((ConvLSTMModel.train[0].shape[2]/4)*(ConvLSTMModel.train[0].shape[3]/4)*256, activation='relu')(encoded)

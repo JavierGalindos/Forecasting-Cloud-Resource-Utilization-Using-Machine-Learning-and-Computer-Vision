@@ -125,7 +125,7 @@ def load_datacenter(VMs: List[pd.DataFrame]) -> pd.DataFrame:
 
 
 def plot_timeSeries(data, MA=0, ema=0.05, legend=True, xlabel='Time', ylabel=None, title=None, xlim=None, ylim=None,
-                    xticks=None, figsize=(8, 6), dpi=120, savefig=None, show=True, **kwargs):
+                    xticks=None, figsize=(25, 5), dpi=120, savefig=None, show=True, **kwargs):
     """ Utility to plot Time Series with moving average filters """
 
     # Define default kwargs
@@ -385,3 +385,79 @@ def class2num(y, mean_class):
 
     """
     return mean_class[y]
+
+
+def preprocessIoU(img, epsilon):
+    levels = np.argmax(img, axis=0)
+    # Column dilation of the pixels
+    for column, level in enumerate(levels):
+        for i in range(1, epsilon + 1):
+            # Add white pixel on top
+            img[min(level + i, 99), column] = 255
+            # Add white pixel on bottom
+            img[min(level - i, 99), column] = 255
+    return img
+
+
+def columnIoU(img_pred, img_gt, epsilon):
+    # Preprocess IoU with epsilon
+    img_gt = preprocessIoU(np.copy(img_gt), epsilon)
+    img_pred = preprocessIoU(np.copy(img_pred), epsilon)
+    # # Plotting for debug
+    # fig, axes = plt.subplots(2, 1, figsize=(15, 6))
+    # plt.suptitle('Test set: ground truth vs prediction', fontsize=16)
+    # # Ground Truth
+    # axes[0].imshow(img_gt, cmap="gray")
+    # axes[0].set_title('Ground truth')
+    # axes[0].axis("off")
+    # # Prediction
+    # axes[1].imshow(img_pred, cmap="gray")
+    # axes[1].set_title('Prediction')
+    # axes[1].axis("off")
+
+    IoU = []
+    for i in range(img_pred.shape[1]):
+        # Get coordinates of bounding box
+        column_gt = img_gt[:, i]
+        column_pred = img_pred[:, i]
+        # Get the rows whose value is white
+        rows_gt = [i for i, _ in enumerate(column_gt) if _ == 255]
+        rows_pred = [i for i, _ in enumerate(column_pred) if _ == 255]
+        # determine the y-coordinates of the intersection rectangle (width is always 1)
+        yA = max(min(rows_gt), min(rows_pred))
+        yB = min(max(rows_gt), max(rows_pred))
+
+        # compute the area of intersection rectangle
+        interArea = abs(max((yB - yA), 0))
+        if interArea == 0:
+            IoU.append(0)
+            continue
+        # compute the area of both the prediction and ground-truth
+        # rectangles
+        boxGt = abs(max(rows_gt) - min(rows_gt))
+        boxPred = abs(max(rows_pred) - min(rows_pred))
+
+        # compute the intersection over union by taking the intersection
+        # area and dividing it by the sum of prediction + ground-truth
+        # areas - the intersection area
+        iou = interArea / float(boxGt + boxPred - interArea)
+        IoU.append(iou)
+    # return the intersection over union value
+    return np.mean(IoU)
+
+def dtw(s, t):
+    n, m = len(s), len(t)
+    dtw_matrix = np.zeros((n+1, m+1))
+    for i in range(n+1):
+        for j in range(m+1):
+            dtw_matrix[i, j] = np.inf
+    dtw_matrix[0, 0] = 0
+
+    for i in range(1, n+1):
+        for j in range(1, m+1):
+            cost = abs(s[i-1] - t[j-1])
+            # take last min from a square box
+            last_min = np.min([dtw_matrix[i-1, j], dtw_matrix[i, j-1], dtw_matrix[i-1, j-1]])
+            dtw_matrix[i, j] = cost + last_min
+    return dtw_matrix[n, m]
+

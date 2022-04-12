@@ -610,13 +610,20 @@ class ConvLSTMModel:
         y_true = np.array(test_trf[:len(pred), 0])
         y_pred = np.array(pred['CPU usage [MHZ]'])
         y_train = np.array(train_trf[:, 0])
+        pred_trf = pred.copy()
+        pred_trf.loc[:, pred_trf.columns] = scaler.transform(pred_trf.loc[:, pred_trf.columns])
+        img_pred = self.create_image_numpy(pred_trf.iloc[:, 0], len(pred))
+        img_gt = self.create_image_numpy(self.test_df.iloc[:len(pred_trf), 0], len(pred_trf))
+
         metrics_dic = {'MAE': np.array(tf.keras.metrics.mean_absolute_error(y_true, y_pred)),
                        'MAPE': np.array(tf.keras.metrics.mean_absolute_percentage_error(y_true, y_pred)),
                        'RMSE': np.sqrt(np.array(tf.keras.metrics.mean_squared_error(y_true, y_pred))),
                        'MASE': mase(y_true, y_pred, y_train),
                        'train_time [s]': self.train_time,
                        'inference_time [s]': self.inference_time,
-                       'model_size [B]': self.model_size
+                       'model_size [B]': self.model_size,
+                       'IoU': columnIoU(img_pred, img_gt, 1),
+                       'DTW': dtw(y_true, y_pred),
                        }
 
         # Save metrics
@@ -639,7 +646,7 @@ class ConvLSTMModel:
         # Create a dataframe of errors
         errors_dic = {'MAE': mae_array(y_true, y_pred),
                       'MAPE': mape_array(y_true, y_pred),
-                      'RMSE': rmse_array(y_true, y_pred),
+                      # 'RMSE': rmse_array(y_true, y_pred),
                       }
         errors = pd.DataFrame.from_dict(errors_dic, orient='index')
         errors = errors.T

@@ -328,6 +328,116 @@ class LstmModel:
         save_path = os.path.join(FIGURES_PATH, self.name, 'forecast_zoom')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
+
+        # Figure GT vs prediction (test)
+        # Dots
+        defaultKwargs = {'marker': 'o',
+                         'linestyle': '',
+                         'alpha': 0.6,
+                         'markersize': 2}
+        kwargs_forecast = {'marker': 'o',
+                           'linestyle': '',
+                           'alpha': 0.6,
+                           'markersize': 2,
+                           'color': 'tab:orange'}
+        # Construct a figure for the original and new frames.
+        fig, axes = plt.subplots(2, 1, figsize=(20, 7), sharex=True, sharey=True)
+        plt.suptitle('Test set: GT vs prediction', fontsize=16)
+        # Ground Truth
+        axes[0].plot(test_df_trf['CPU usage [MHZ]'], label='actual', color='k', **defaultKwargs)
+        axes[0].set_title('Ground truth')
+        axes[0].set_ylabel('CPU usage [MHz]')
+        # Prediction
+        axes[1].plot(pred_df_trf['CPU usage [MHZ]'], label='forecast', **kwargs_forecast)
+        axes[1].set_title('Prediction')
+        axes[1].set_ylabel('CPU usage [MHz]')
+        axes[1].set_xlabel('Time')
+        save_path = os.path.join(FIGURES_PATH, self.name, 'gt_vs_pred_dots')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+        # Lines and dots
+        defaultKwargs = {'marker': 'o',
+                         'linestyle': '-',
+                         'alpha': 0.6,
+                         'markersize': 2}
+        kwargs_forecast = {'marker': 'o',
+                           'linestyle': '-',
+                           'alpha': 0.6,
+                           'markersize': 2,
+                           'color': 'tab:orange'}
+        # Construct a figure for the original and new frames.
+        fig, axes = plt.subplots(2, 1, figsize=(20, 7), sharex=True, sharey=True)
+        plt.suptitle('Test set: GT vs prediction', fontsize=16)
+        # Ground Truth
+        axes[0].plot(test_df_trf['CPU usage [MHZ]'], label='actual', color='k', **defaultKwargs)
+        axes[0].set_title('Ground truth')
+        axes[0].set_ylabel('CPU usage [MHz]')
+        # Prediction
+        axes[1].plot(pred_df_trf['CPU usage [MHZ]'], label='forecast', **kwargs_forecast)
+        axes[1].set_title('Prediction')
+        axes[1].set_ylabel('CPU usage [MHz]')
+        axes[1].set_xlabel('Time')
+        save_path = os.path.join(FIGURES_PATH, self.name, 'gt_vs_pred_lines')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+        # Figure GT vs prediction (full)
+        # Dots
+        defaultKwargs = {'marker': 'o',
+                         'linestyle': '',
+                         'alpha': 0.6,
+                         'markersize': 2}
+        kwargs_forecast = {'marker': 'o',
+                           'linestyle': '',
+                           'alpha': 0.6,
+                           'markersize': 2,
+                           'color': 'tab:orange'}
+        # Construct a figure for the original and new frames.
+        fig, axes = plt.subplots(2, 1, figsize=(20, 7), sharex=True, sharey=True)
+        plt.suptitle('Test set: GT vs prediction', fontsize=16)
+        # Ground Truth
+        axes[0].plot(self.df['CPU usage [MHZ]'], label='actual', color='k', **defaultKwargs)
+        axes[0].set_title('Ground truth')
+        axes[0].set_ylabel('CPU usage [MHz]')
+        # Prediction
+        axes[1].plot(self.df.iloc[:(len(self.df) - len(pred_df_trf)), 0], label='actual', color='k', **defaultKwargs)
+        axes[1].plot(pred_df_trf['CPU usage [MHZ]'], label='forecast', **kwargs_forecast)
+        axes[1].set_title('Prediction')
+        axes[1].set_ylabel('CPU usage [MHz]')
+        axes[1].set_xlabel('Time')
+        axes[1].legend()
+        save_path = os.path.join(FIGURES_PATH, self.name, 'gt_vs_pred_dots_full')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+        # Lines and dots
+        defaultKwargs = {'marker': 'o',
+                         'linestyle': '-',
+                         'alpha': 0.6,
+                         'markersize': 2}
+        kwargs_forecast = {'marker': 'o',
+                           'linestyle': '-',
+                           'alpha': 0.6,
+                           'markersize': 2,
+                           'color': 'tab:orange'}
+        # Construct a figure for the original and new frames.
+        fig, axes = plt.subplots(2, 1, figsize=(20, 7), sharex=True, sharey=True)
+        plt.suptitle('Test set: GT vs prediction', fontsize=16)
+        # Ground Truth
+        axes[0].plot(self.df['CPU usage [MHZ]'], label='actual', color='k', **defaultKwargs)
+        axes[0].set_title('Ground truth')
+        axes[0].set_ylabel('CPU usage [MHz]')
+        # Prediction
+        axes[1].plot(self.df.iloc[:(len(self.df) - len(pred_df_trf)), 0], label='actual', color='k', **defaultKwargs)
+        axes[1].plot(pred_df_trf['CPU usage [MHZ]'], label='forecast', **kwargs_forecast)
+        axes[1].set_title('Prediction')
+        axes[1].set_ylabel('CPU usage [MHz]')
+        axes[1].set_xlabel('Time')
+        axes[1].legend()
+        save_path = os.path.join(FIGURES_PATH, self.name, 'gt_vs_pred_lines_full')
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
         return pred_df_trf
 
     def evaluation(self, pred, scaler):
@@ -336,13 +446,19 @@ class LstmModel:
         y_true = np.array(test_trf[:, 0])
         y_pred = np.array(pred['CPU usage [MHZ]'])
         y_train = np.array(train_trf[:, 0])
+        pred_trf = pred.copy()
+        pred_trf.loc[:, pred_trf.columns] = scaler.transform(pred_trf.loc[:, pred_trf.columns])
+        img_pred = self.create_image_numpy(pred_trf.iloc[:, 0], len(pred))
+        img_gt = self.create_image_numpy(self.test_df.iloc[:len(pred_trf), 0], len(pred_trf))
         metrics_dic = {'MAE': np.array(tf.keras.metrics.mean_absolute_error(y_true, y_pred)),
                        'MAPE': np.array(tf.keras.metrics.mean_absolute_percentage_error(y_true, y_pred)),
                        'RMSE': np.sqrt(np.array(tf.keras.metrics.mean_squared_error(y_true, y_pred))),
                        'MASE': mase(y_true, y_pred, y_train),
                        'train_time [s]': self.train_time,
                        'inference_time [s]': self.inference_time,
-                       'model_size [B]': self.model_size
+                       'model_size [B]': self.model_size,
+                       'IoU': columnIoU(img_pred, img_gt, 1),
+                       'DTW': dtw(y_true, y_pred),
                        }
 
         # Save metrics
@@ -362,11 +478,11 @@ class LstmModel:
         test_trf = scaler.inverse_transform(self.test_df)
         y_true = np.array(test_trf[:len(pred), 0])
         y_pred = np.array(pred['CPU usage [MHZ]'])
-        # Create a dataframe of errrs
+        # Create a dataframe of errors
         errors_dic = {'MAE': mae_array(y_true, y_pred),
-                       'MAPE': mape_array(y_true, y_pred),
-                       'RMSE': rmse_array(y_true, y_pred),
-                       }
+                      'MAPE': mape_array(y_true, y_pred),
+                      # 'RMSE': rmse_array(y_true, y_pred),
+                      }
         errors = pd.DataFrame.from_dict(errors_dic, orient='index')
         errors = errors.T
         print(errors.describe())
@@ -384,6 +500,20 @@ class LstmModel:
             print("Unable to write to file")
         return errors
 
+    @staticmethod
+    def create_image_numpy(data, width, height=100):
+        data = np.squeeze(data)
+        # Get the height of each column (0-100)
+        level = np.round(data * 100)
+        # Invert y-axis from bottom to top
+        level = 100 - level - 1
+        # Create the image
+        img = np.zeros((height, width))
+        # Fill with ones the corresponding level
+        for i in range(width):
+            img[int(level[i]), i] = 255
+        return img
+
 
 def add_daily_info(df: pd.DataFrame) -> pd.DataFrame:
     timestamp_s = df.index.map(pd.Timestamp.timestamp)
@@ -393,7 +523,6 @@ def add_daily_info(df: pd.DataFrame) -> pd.DataFrame:
     df['Day cos'] = np.cos(timestamp_s * (2 * np.pi / day))
     df['Hour'] = np.array(df.index.floor(freq='H').hour)
     return df
-
 
 # Do not need it anymore
 # class WindowGenerator:
