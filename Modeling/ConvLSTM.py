@@ -188,7 +188,7 @@ class ConvLSTMModel:
             # Input
             # Create n_frames images for the input. Always same overlapping
             for j in range(0, self.n_frames):
-                img = self.create_image_matplotlib(
+                img = self.create_image_numpy(
                     data[(i + j * self.label_width):(i + j * self.label_width + self.input_width), :], self.image_width,
                     100)
                 # Normalize image
@@ -202,7 +202,7 @@ class ConvLSTMModel:
             if self.numeric is False:
                 # j = n_frames + 1 (to save previous position and get next image
                 if self.model_name == "video":
-                    img = self.create_image_matplotlib(
+                    img = self.create_image_numpy(
                         data[(i + j * self.label_width + self.label_width):(
                                 i + j * self.label_width + self.input_width + self.label_width), :],
                         self.image_width, 100)
@@ -213,7 +213,7 @@ class ConvLSTMModel:
                     frames = []
                 else:
                     for j in range(0, self.n_frames):
-                        img = self.create_image_matplotlib(
+                        img = self.create_image_numpy(
                             data[(i + j * self.label_width + self.label_width):(
                                     i + j * self.label_width + self.input_width + self.label_width), :],
                             self.image_width, 100)

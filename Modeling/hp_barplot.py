@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Constants
-LOGS_PATH = './logs/ConvLSTM/video/917'
-HP = 'ratio'
-HP_NAME = 'ratio'
-FIGURES_PATH = '../Figures/Modeling/ConvLSTM/video/917'
+LOGS_PATH = './logs/ConvLSTM/AE/917/Barplot'
+HP = 'image'
+HP_NAME = 'image'
+FIGURES_PATH = '../Figures/Modeling/ConvLSTM/AE/917'
 if __name__ == "__main__":
     # List files
     hp_list =[]
@@ -18,10 +18,10 @@ if __name__ == "__main__":
     hp_df_list = []
     for idx, file in enumerate(hp_list):
         # Remove int() if parameters are not numeric
-        data = pd.read_csv(os.path.join(LOGS_PATH, hp_list[idx], 'metrics.txt'),
-                           names=[int(hp_list[idx].split('_')[1])], sep=',', index_col=0, engine='python')
         # data = pd.read_csv(os.path.join(LOGS_PATH, hp_list[idx], 'metrics.txt'),
-        #                     names=[hp_list[idx].split('_')[1]], sep=',', index_col=0, engine='python')
+        #                    names=[int(hp_list[idx].split('_')[1])], sep=',', index_col=0, engine='python')
+        data = pd.read_csv(os.path.join(LOGS_PATH, hp_list[idx], 'metrics.txt'),
+                            names=[hp_list[idx].split('_')[1]], sep=',', index_col=0, engine='python')
         hp_df_list.append(data)
 
     # Create dataframe and sort
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     # Inference time
     fig = plt.figure(dpi=200)
-    hp_df.iloc[6, :].plot.bar(rot=0)
+    hp_df.iloc[6, :].plot.bar(rot=0, color='tab:orange')
     plt.xlabel(f'{HP_NAME}')
     plt.ylabel('Inference time [s]')
     plt.title(f'Hyperparameter: {HP_NAME}')
@@ -66,13 +66,37 @@ if __name__ == "__main__":
 
     # Size of the mode
     fig = plt.figure(dpi=200)
-    hp_df.iloc[7, :].plot.bar(rot=0)
+    hp_df.iloc[7, :].plot.bar(rot=0, color='tab:green')
     plt.xlabel(f'{HP_NAME}')
     plt.ylabel('Size of the model [B]')
     plt.title(f'Hyperparameter: {HP_NAME}')
     if not os.access(os.path.join(FIGURES_PATH, HP_NAME), os.F_OK):
         os.mkdir(os.path.join(FIGURES_PATH, HP_NAME))
     save_path = os.path.join(FIGURES_PATH, HP_NAME, 'model_size')
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close(fig)
+
+    # IoU
+    fig = plt.figure(dpi=200)
+    hp_df.iloc[8, :].plot.bar(rot=0, color='tab:purple')
+    plt.xlabel(f'{HP_NAME}')
+    plt.ylabel('IoU')
+    plt.title(f'Hyperparameter: {HP_NAME}')
+    if not os.access(os.path.join(FIGURES_PATH, HP_NAME), os.F_OK):
+        os.mkdir(os.path.join(FIGURES_PATH, HP_NAME))
+    save_path = os.path.join(FIGURES_PATH, HP_NAME, 'IoU')
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close(fig)
+
+    # DTW
+    fig = plt.figure(dpi=200)
+    hp_df.iloc[9, :].plot.bar(rot=0, color='tab:red')
+    plt.xlabel(f'{HP_NAME}')
+    plt.ylabel('Dynamic time warping')
+    plt.title(f'Hyperparameter: {HP_NAME}')
+    if not os.access(os.path.join(FIGURES_PATH, HP_NAME), os.F_OK):
+        os.mkdir(os.path.join(FIGURES_PATH, HP_NAME))
+    save_path = os.path.join(FIGURES_PATH, HP_NAME, 'IoU')
     plt.savefig(save_path, bbox_inches='tight')
     plt.close(fig)
 
