@@ -6,6 +6,8 @@ import random
 from typing import List
 import seaborn as sns
 from sklearn.preprocessing import LabelEncoder
+from scipy.spatial.distance import euclidean
+from fastdtw import fastdtw
 
 ''' Data constants'''
 DATA_PATH = r'../Datasets/fastStorage/2013-8'
@@ -274,7 +276,7 @@ def mape_array(y, y_hat):
         -------
 
         """
-    return np.abs((y - y_hat)/y)*100
+    return np.abs((y - y_hat) / y) * 100
 
 
 def mase(y, y_hat, y_train) -> np.ndarray:
@@ -445,19 +447,21 @@ def columnIoU(img_pred, img_gt, epsilon):
     # return the intersection over union value
     return np.mean(IoU)
 
+
 def dtw(s, t):
-    n, m = len(s), len(t)
-    dtw_matrix = np.zeros((n+1, m+1))
-    for i in range(n+1):
-        for j in range(m+1):
-            dtw_matrix[i, j] = np.inf
-    dtw_matrix[0, 0] = 0
-
-    for i in range(1, n+1):
-        for j in range(1, m+1):
-            cost = abs(s[i-1] - t[j-1])
-            # take last min from a square box
-            last_min = np.min([dtw_matrix[i-1, j], dtw_matrix[i, j-1], dtw_matrix[i-1, j-1]])
-            dtw_matrix[i, j] = cost + last_min
-    return dtw_matrix[n, m]
-
+    # n, m = len(s), len(t)
+    # dtw_matrix = np.zeros((n+1, m+1))
+    # for i in range(n+1):
+    #     for j in range(m+1):
+    #         dtw_matrix[i, j] = np.inf
+    # dtw_matrix[0, 0] = 0
+    #
+    # for i in range(1, n+1):
+    #     for j in range(1, m+1):
+    #         cost = abs(s[i-1] - t[j-1])
+    #         # take last min from a square box
+    #         last_min = np.min([dtw_matrix[i-1, j], dtw_matrix[i, j-1], dtw_matrix[i-1, j-1]])
+    #         dtw_matrix[i, j] = cost + last_min
+    # return dtw_matrix[n, m]
+    distance, path = fastdtw(s, t, dist=euclidean)
+    return distance
