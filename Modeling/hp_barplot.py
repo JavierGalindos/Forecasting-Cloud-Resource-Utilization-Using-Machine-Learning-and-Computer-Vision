@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Constants
-LOGS_PATH = './logs/ConvLSTM/LRCN/917'
-HP = 'labels'
-HP_NAME = 'labels'
-FIGURES_PATH = '../Figures/Modeling/ConvLSTM/LRCN/917'
+LOGS_PATH = './logs/ConvLSTM/video/917'
+HP = 'overlap'
+HP_NAME = 'overlap'
+FIGURES_PATH = '../Figures/Modeling/ConvLSTM/video/917'
 plt.rcParams['font.size'] = '13'
 if __name__ == "__main__":
     # List files
