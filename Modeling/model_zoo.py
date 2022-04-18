@@ -104,7 +104,7 @@ def get_model(ConvLSTMModel, name):
 
         model.add(
             tf.keras.layers.TimeDistributed(tf.keras.layers.Conv2D(64, (3, 3), padding='same', activation='relu')))
-        model.add(tf.keras.layers.TimeDistributed(tf.keras.layers.MaxPooling2D((2, 2), padding='same')))
+        model.add(tf.keras.layers.TimeDistributed(tf.keras.layers.MaxPooling2D((2, 2))))
         # model.add(TimeDistributed(Dropout(0.25)))
 
         model.add(tf.keras.layers.TimeDistributed(tf.keras.layers.Flatten()))

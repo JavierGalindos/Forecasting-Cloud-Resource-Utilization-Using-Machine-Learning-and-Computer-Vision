@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Constants
-LOGS_PATH = './logs/ConvLSTM/video/917'
-HP = 'overlap'
-HP_NAME = 'overlap'
-FIGURES_PATH = '../Figures/Modeling/ConvLSTM/video/917'
+LOGS_PATH = './logs/ConvLSTM/Comparison/917'
+HP = 'model'
+HP_NAME = 'model'
+FIGURES_PATH = '../Figures/Modeling/ConvLSTM/Comparison/917'
 plt.rcParams['font.size'] = '13'
 if __name__ == "__main__":
     # List files
@@ -19,10 +19,10 @@ if __name__ == "__main__":
     hp_df_list = []
     for idx, file in enumerate(hp_list):
         # Remove int() if parameters are not numeric
-        data = pd.read_csv(os.path.join(LOGS_PATH, hp_list[idx], 'metrics.txt'),
-                           names=[int(hp_list[idx].split('_')[1])], sep=',', index_col=0, engine='python')
         # data = pd.read_csv(os.path.join(LOGS_PATH, hp_list[idx], 'metrics.txt'),
-        #                     names=[hp_list[idx].split('_')[1]], sep=',', index_col=0, engine='python')
+        #                    names=[int(hp_list[idx].split('_')[1])], sep=',', index_col=0, engine='python')
+        data = pd.read_csv(os.path.join(LOGS_PATH, hp_list[idx], 'metrics.txt'),
+                            names=[hp_list[idx].split('_')[1]], sep=',', index_col=0, engine='python')
         hp_df_list.append(data)
 
     # Create dataframe and sort

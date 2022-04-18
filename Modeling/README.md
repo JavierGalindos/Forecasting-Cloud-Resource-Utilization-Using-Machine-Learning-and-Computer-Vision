@@ -52,6 +52,20 @@ export PYTHONPATH='/Users/javier.galindos/Library/CloudStorage/OneDrive-Fundaci√
 python3 ConvLSTM_train.py -e 100 -n '917/ConvLSTM' -i 64 --label 16
 ```
 
+### Cross modeling: ConvLSTM_CM.py
+TODO
+
+To run:
+```
+python ConvLSTM_CM.py -e <number of epoch> -m <model_name> -n <name of the model>  -i <input_length>   --label <labels length> -f <number of frames> 
+```
+
+Example:
+```
+export PYTHONPATH='/Users/javier.galindos/Library/CloudStorage/OneDrive-Fundaci√≥nIMDEASoftware/Documents/Code/intern-project-javier'
+python3 ConvLSTM_train.py -e 100 -n '917/ConvLSTM' -i 64 --label 16
+```
+
 ### Load Tensorboard
 To check training process:
 ```
