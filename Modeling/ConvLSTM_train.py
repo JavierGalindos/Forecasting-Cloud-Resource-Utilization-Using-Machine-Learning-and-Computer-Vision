@@ -47,7 +47,7 @@ FRAMES = int(args.frames)
 NUMERIC = bool(args.numeric)
 VM_NUM = int(args.VM)
 OVERLAPPING = args.overlapping
-IMAGE_WIDTH = int(args.img_width)
+IMAGE_WIDTH = args.img_width
 
 if __name__ == "__main__":
     print('Pre-processing')

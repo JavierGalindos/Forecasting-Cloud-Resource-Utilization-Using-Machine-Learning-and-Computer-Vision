@@ -1,22 +1,19 @@
 #! /bin/bash
-python3 ConvLSTM_train.py -m 'LRCN' -n '917/input_64' -i 64 --label 16 --img_width 64 --VM 917
-python3 ConvLSTM_train.py -m 'LRCN' -n '917/input_128' -i 128 --label 16 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'LRCN' -n '917/input_256' -i 256 --label 16 --img_width 256 --VM 917
-python3 ConvLSTM_train.py -m 'video' -n '917/input_64' -i 64 --label 16 --img_width 64 --VM 917
-python3 ConvLSTM_train.py -m 'video' -n '917/input_128' -i 128 --label 16 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'video' -n '917/input_256' -i 256 --label 16 --img_width 256 --VM 917
-python3 ConvLSTM_train.py -m 'AE' -n '917/labels_1' -i 128 --label 1 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'AE' -n '917/labels_8' -i 128 --label 8 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'AE' -n '917/labels_16' -i 128 --label 16 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'AE' -n '917/labels_32' -i 128 --label 32 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'LRCN' -n '917/labels_1' -i 128 --label 1 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'LRCN' -n '917/labels_8' -i 128 --label 8 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'LRCN' -n '917/labels_16' -i 128 --label 16 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'LRCN' -n '917/labels_32' -i 128 --label 32 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'video' -n '917/labels_1' -i 128 --label 1 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'video' -n '917/labels_8' -i 128 --label 8 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'video' -n '917/labels_16' -i 128 --label 16 --img_width 128 --VM 917
-python3 ConvLSTM_train.py -m 'video' -n '917/labels_32' -i 128 --label 32 --img_width 128 --VM 917
+python3 ConvLSTM_train.py -m 'AE' -n '917/overlap_50' -i 32 --VM 917 --overlapping 0.50
+python3 ConvLSTM_train.py -m 'AE' -n '917/overlap_75' -i 64 --VM 917 --overlapping 0.75
+python3 ConvLSTM_train.py -m 'AE' -n '917/overlap_80' -i 80 --VM 917 --overlapping 0.80
+python3 ConvLSTM_train.py -m 'AE' -n '917/overlap_90' -i 160 --VM 917 --overlapping 0.90
+python3 ConvLSTM_train.py -m 'AE' -n '917/overlap_95' -i 320 --VM 917 --overlapping 0.95
+python3 ConvLSTM_train.py -m 'LRCN' -n '917/overlap_50' -i 32 --VM 917 --overlapping 0.50
+python3 ConvLSTM_train.py -m 'LRCN' -n '917/overlap_75' -i 64 --VM 917 --overlapping 0.75
+python3 ConvLSTM_train.py -m 'LRCN' -n '917/overlap_80' -i 80 --VM 917 --overlapping 0.80
+python3 ConvLSTM_train.py -m 'LRCN' -n '917/overlap_90' -i 160 --VM 917 --overlapping 0.90
+python3 ConvLSTM_train.py -m 'LRCN' -n '917/overlap_95' -i 320 --VM 917 --overlapping 0.95
+python3 ConvLSTM_train.py -m 'video' -n '917/overlap_50' -i 32 --VM 917 --overlapping 0.50
+python3 ConvLSTM_train.py -m 'video' -n '917/overlap_75' -i 64 --VM 917 --overlapping 0.75
+python3 ConvLSTM_train.py -m 'video' -n '917/overlap_80' -i 80 --VM 917 --overlapping 0.80
+python3 ConvLSTM_train.py -m 'video' -n '917/overlap_90' -i 160 --VM 917 --overlapping 0.90
+python3 ConvLSTM_train.py -m 'video' -n '917/overlap_95' -i 320 --VM 917 --overlapping 0.95
 
 
 

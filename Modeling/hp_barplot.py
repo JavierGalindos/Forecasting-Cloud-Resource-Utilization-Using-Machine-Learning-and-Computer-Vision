@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Constants
-LOGS_PATH = './logs/ConvLSTM/AE/917'
-HP = 'ratio'
-HP_NAME = 'ratio'
-FIGURES_PATH = '../Figures/Modeling/ConvLSTM/AE/917'
+LOGS_PATH = './logs/ConvLSTM/LRCN/917'
+HP = 'labels'
+HP_NAME = 'labels'
+FIGURES_PATH = '../Figures/Modeling/ConvLSTM/LRCN/917'
 plt.rcParams['font.size'] = '13'
 if __name__ == "__main__":
     # List files
