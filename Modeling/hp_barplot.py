@@ -4,8 +4,8 @@ import pandas as pd
 
 # Constants
 LOGS_PATH = './logs/ConvLSTM/Comparison/917'
-HP = 'model'
-HP_NAME = 'model'
+HP = 'cross-modeling'
+HP_NAME = 'cross modeling'
 FIGURES_PATH = '../Figures/Modeling/ConvLSTM/Comparison/917'
 plt.rcParams['font.size'] = '13'
 if __name__ == "__main__":

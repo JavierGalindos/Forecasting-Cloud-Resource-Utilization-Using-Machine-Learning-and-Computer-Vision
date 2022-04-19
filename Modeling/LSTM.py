@@ -300,7 +300,7 @@ class LstmModel:
                            'alpha': 0.5,
                            'markersize': 2,
                            'color': 'tab:orange'}
-        fig = plt.figure(dpi=200)
+        fig = plt.figure(dpi=200, figsize=(20, 5))
         plt.grid()
         self.df['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
@@ -315,7 +315,7 @@ class LstmModel:
         plt.close(fig)
 
         # Figure zoom
-        fig = plt.figure(dpi=200)
+        fig = plt.figure(dpi=200, figsize=(20, 5))
         plt.grid()
         test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
