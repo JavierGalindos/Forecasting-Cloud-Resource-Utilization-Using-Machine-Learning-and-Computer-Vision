@@ -495,7 +495,10 @@ class LstmModel:
         plt.savefig(save_path, bbox_inches='tight')
         # Save the errors
         try:
-            filename = os.path.join('logs', self.name, 'errors.txt')
+            filename = os.path.join('logs/LSTM', self.name)
+            if not os.access(filename, os.F_OK):
+                os.makedirs(filename)
+            filename = os.path.join('logs/LSTM', self.name, 'errors.txt')
             errors.to_csv(filename)
         except:
             print("Unable to write to file")
