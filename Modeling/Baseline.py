@@ -68,6 +68,7 @@ class Baseline:
         self.inference_time = time.perf_counter() - t_start
         pred = np.reshape(pred, (-1, 1))
         pred = pred[:len(self.test_df), :]
+        self.test_df = self.test_df.iloc[:len(pred), :]
         pred_df = pd.DataFrame(data=np.array(pred), columns=['CPU usage [MHZ]'], index=self.test_df.index)
         return pred_df
 

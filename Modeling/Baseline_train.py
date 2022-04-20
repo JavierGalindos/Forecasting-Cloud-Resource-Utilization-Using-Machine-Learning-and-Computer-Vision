@@ -35,6 +35,19 @@ if __name__ == "__main__":
     # Split data
     train_df, val_df, test_df = split_data(df, 0.9, 0)
 
+    # Exponential smoothing
+    exp_model = Baseline(label_width=LABEL_LENGTH,
+                         df=df,
+                         train_df=train_df,
+                         val_df=val_df,
+                         test_df=test_df,
+                         model_name='exp',
+                         name=NAME)
+    # Prediction
+    pred_df = exp_model.baseline_prediction()
+    # Validation
+    metrics = exp_model.baseline_evaluate(pred_df)
+
     # ARIMA
     arima_model = Baseline(label_width=LABEL_LENGTH,
                            df=df,
@@ -48,15 +61,4 @@ if __name__ == "__main__":
     # Validation
     metrics = arima_model.baseline_evaluate(pred_df)
 
-    # Exponential smoothing
-    exp_model = Baseline(label_width=LABEL_LENGTH,
-                         df=df,
-                         train_df=train_df,
-                         val_df=val_df,
-                         test_df=test_df,
-                         model_name='exp',
-                         name=NAME)
-    # Prediction
-    pred_df = exp_model.baseline_prediction()
-    # Validation
-    metrics = exp_model.baseline_evaluate(pred_df)
+

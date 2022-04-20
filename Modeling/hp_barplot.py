@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Constants
-LOGS_PATH = './logs/ConvLSTM/Comparison/917'
-HP = 'cross-modeling'
-HP_NAME = 'cross modeling'
-FIGURES_PATH = '../Figures/Modeling/ConvLSTM/Comparison/917'
+LOGS_PATH = './logs/Comparison/fh_32'
+HP = 'model'
+HP_NAME = 'model'
+FIGURES_PATH = '../Figures/Modeling/Comparison/917/fh_32'
 plt.rcParams['font.size'] = '13'
 if __name__ == "__main__":
     # List files
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     plt.xlabel('Metric')
     plt.title(f'Hyperparameter: {HP_NAME}')
     if not os.access(os.path.join(FIGURES_PATH, HP_NAME), os.F_OK):
-        os.mkdir(os.path.join(FIGURES_PATH, HP_NAME))
+        os.makedirs(os.path.join(FIGURES_PATH, HP_NAME))
     save_path = os.path.join(FIGURES_PATH, HP_NAME, 'MAE_MAPE_RMSE')
     plt.savefig(save_path, bbox_inches='tight')
     plt.close(fig)
