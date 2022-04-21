@@ -252,6 +252,11 @@ class LstmModel:
         save_path = os.path.join(FIGURES_PATH, self.name, 'Loss')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
+        # Save model structure
+        tf.keras.utils.plot_model(self.model,
+                                  to_file=os.path.join(FIGURES_PATH, self.name, 'model_structure.png'),
+                                  show_shapes=True, show_layer_names=True)
+        return history
         return history
 
     def prediction(self, scaler):

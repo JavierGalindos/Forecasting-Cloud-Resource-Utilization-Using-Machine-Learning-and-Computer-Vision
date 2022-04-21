@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Constants
-LOGS_PATH = './logs/Comparison/fh_32'
-HP = 'model'
-HP_NAME = 'model'
-FIGURES_PATH = '../Figures/Modeling/Comparison/917/fh_32'
+LOGS_PATH = './logs/Comparison/cm'
+HP = 'cross-modeling'
+HP_NAME = 'cross-modeling'
+FIGURES_PATH = '../Figures/Modeling/Comparison/917/cm'
 plt.rcParams['font.size'] = '13'
 if __name__ == "__main__":
     # List files
