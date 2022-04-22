@@ -68,7 +68,7 @@ if __name__ == "__main__":
     train_df, val_df, _ = split_data(df, 0.8, 0.19)
     # Test set from other VM
     VM_test = load_VM(f'{VM_NUM_test}.csv')
-    df_test = VM[['CPU usage [MHZ]']]
+    df_test = VM_test[['CPU usage [MHZ]']]
 
     # Normalizing
     # Train & Validation
