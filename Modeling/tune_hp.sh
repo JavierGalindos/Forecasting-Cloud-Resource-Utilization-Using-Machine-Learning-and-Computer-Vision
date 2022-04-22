@@ -1,8 +1,13 @@
 #! /bin/bash
-python3 Baseline_train.py -n '917/labels_1' --label 1
-python3 Baseline_train.py -n '917/labels_8' --label 8
-python3 Baseline_train.py -n '917/labels_16' --label 16
-python3 Baseline_train.py -n '917/labels_32' --label 32
+python3 ConvLSTM_CM.py -m 'AE' -n '917/CM_1081' -i 128 --VM 917 --label 16 --VM_test 1081
+python3 ConvLSTM_CM.py -m 'LRCN' -n '917/CM_1081' -i 128 --VM 917 --label 16 --VM_test 1081
+python3 ConvLSTM_CM.py -m 'video' -n '917/CM_1081' -i 128 --VM 917 --label 16 --VM_test 1081
+python3 ConvLSTM_CM.py -m 'AE' -n '917/CM_555' -i 128 --VM 917 --label 16 --VM_test 555
+python3 ConvLSTM_CM.py -m 'LRCN' -n '917/CM_555' -i 128 --VM 917 --label 16 --VM_test 555
+python3 ConvLSTM_CM.py -m 'video' -n '917/CM_555' -i 128 --VM 917 --label 16 --VM_test 555
+python3 ConvLSTM_CM.py -m 'AE' -n '917/CM_119' -i 128 --VM 917 --label 16 --VM_test 119
+python3 ConvLSTM_CM.py -m 'LRCN' -n '917/CM_119' -i 128 --VM 917 --label 16 --VM_test 119
+python3 ConvLSTM_CM.py -m 'video' -n '917/CM_119' -i 128 --VM 917 --label 16 --VM_test 119
 
 
 
