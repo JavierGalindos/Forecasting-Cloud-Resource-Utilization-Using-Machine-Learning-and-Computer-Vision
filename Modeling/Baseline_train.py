@@ -53,17 +53,7 @@ if __name__ == "__main__":
     train_df, val_df, _ = split_data(df, 0.8, 0.19)
     # Test set from other VM
     VM_test = load_VM(f'{VM_NUM_test}.csv')
-    df_test = VM_test[['CPU usage [MHZ]']]
-
-    # Normalizing
-    # Train & Validation
-    scaler = MinMaxScaler()
-    train_df, val_df, _ = data_transformation(scaler, train_df, val_df, _)
-    # Test
-    scaler = MinMaxScaler()
-    df_test.loc[:, df_test.columns] = scaler.fit_transform(df_test.loc[:, df_test.columns])
-    test_df = df_test.copy()
-
+    test_df = VM_test[['CPU usage [MHZ]']]
 
     # Exponential smoothing
     exp_model = Baseline(label_width=LABEL_LENGTH,
