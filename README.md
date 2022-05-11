@@ -12,17 +12,25 @@ pip install -r requirements.txt
 ```
 
 
+## DataExploration
+Data exploration, data preprocessing and clustering.
 
-
-## Dataset understanding & Data preparation
 [Dataset exploration](DataExploration/README.md)
 
 
 Figures: [Figures Dataset exploration](Figures/DataExploration/README.md)
 
+## Modeling
+Modeling and evaluation.
+
+[Modeling](Modeling/README.md)
+
+
+
+
 Contact
 -------------------------------------
-- [Javier Galindos](https://www.linkedin.com/in/javiergalindos/): javier.galindos@imdea.org
+- [Javier Galindos](https://www.linkedin.com/in/javiergalindos/): javier.galindos [at] imdea.org
 
 Acknowledgments
 -----------------
