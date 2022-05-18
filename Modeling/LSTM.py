@@ -297,15 +297,15 @@ class LstmModel:
         # Figure forecast
         # Define default kwargs
         defaultKwargs = {'marker': 'o',
-                         'linestyle': '',
+                         'linestyle': '-',
                          'alpha': 0.3,
                          'markersize': 2}
         kwargs_forecast = {'marker': 'o',
-                           'linestyle': '',
+                           'linestyle': '-',
                            'alpha': 0.5,
                            'markersize': 2,
-                           'color': 'tab:orange'}
-        fig = plt.figure(dpi=200, figsize=(20, 5))
+                           'color': 'tab:red'}
+        fig = plt.figure(dpi=200, figsize=(20, 4))
         plt.grid()
         self.df['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
@@ -320,13 +320,13 @@ class LstmModel:
         plt.close(fig)
 
         # Figure zoom
-        fig = plt.figure(dpi=200, figsize=(20, 5))
-        plt.grid()
+        fig = plt.figure(dpi=200, figsize=(20, 4))
+        # plt.grid()
         test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
         plt.ylabel('CPU usage [MHz]')
         plt.title(f'Val MAE:{val_mae[1]:.3f}')
-        plt.grid()
+        # plt.grid()
         plt.legend()
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
             os.makedirs(os.path.join(FIGURES_PATH, self.name))

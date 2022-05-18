@@ -132,7 +132,7 @@ def plot_timeSeries(data, MA=0, ema=0.05, legend=True, xlabel='Time', ylabel=Non
 
     # Define default kwargs
     defaultKwargs = {'marker': 'o',
-                     'linestyle': '',
+                     'linestyle': '-',
                      'alpha': 0.3,
                      'markersize': 2}
     kwargs = {**defaultKwargs, **kwargs}

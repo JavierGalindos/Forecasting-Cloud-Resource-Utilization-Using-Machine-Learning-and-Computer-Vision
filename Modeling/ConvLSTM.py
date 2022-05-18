@@ -20,6 +20,7 @@ from DataExploration.BitbrainsUtils import *
 from model_zoo import get_model
 
 FIGURES_PATH = '../Figures/Modeling/ConvLSTM'
+plt.rcParams['font.size'] = '13'
 
 if not os.access(FIGURES_PATH, os.F_OK):
     os.mkdir(FIGURES_PATH)
@@ -456,15 +457,15 @@ class ConvLSTMModel:
         # Figure forecast
         # Define default kwargs
         defaultKwargs = {'marker': 'o',
-                         'linestyle': '',
+                         'linestyle': '-',
                          'alpha': 0.3,
                          'markersize': 2}
         kwargs_forecast = {'marker': 'o',
-                           'linestyle': '',
+                           'linestyle': '-',
                            'alpha': 0.5,
                            'markersize': 2,
-                           'color': 'tab:orange'}
-        fig = plt.figure(dpi=200, figsize=(20, 5))
+                           'color': 'tab:red'}
+        fig = plt.figure(dpi=200, figsize=(20, 4))
         plt.grid()
         self.df['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
@@ -477,13 +478,13 @@ class ConvLSTMModel:
         plt.close(fig)
 
         # Figure zoom
-        fig = plt.figure(dpi=200, figsize=(20, 5))
-        plt.grid()
+        fig = plt.figure(dpi=200, figsize=(20, 4))
+        # plt.grid()
         test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
         plt.ylabel('CPU usage [MHz]')
         plt.title(f'Actual vs Forecast (Zoom)')
-        plt.grid()
+        # plt.grid()
         plt.legend()
         save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'forecast_zoom')
         plt.savefig(save_path, bbox_inches='tight')
