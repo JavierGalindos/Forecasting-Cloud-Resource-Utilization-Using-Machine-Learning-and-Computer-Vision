@@ -46,7 +46,7 @@ LABEL_LENGTH = int(args.label)
 FRAMES = int(args.frames)
 NUMERIC = bool(args.numeric)
 VM_NUM = int(args.VM)
-OVERLAPPING = float(args.overlapping)
+OVERLAPPING = args.overlapping
 IMAGE_WIDTH = args.img_width
 
 if __name__ == "__main__":
