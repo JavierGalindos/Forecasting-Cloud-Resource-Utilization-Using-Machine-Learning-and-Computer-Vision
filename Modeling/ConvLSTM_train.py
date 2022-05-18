@@ -13,7 +13,7 @@ parser.add_argument('-m', '--model_name', default='frame',
 parser.add_argument('-n', '--name', default='917/ConvLSTM',
                     help='name of the model')
 
-parser.add_argument('-i', '--input_length', default=64,
+parser.add_argument('-i', '--input_length', default=128,
                     help='input_length ')
 
 parser.add_argument('-f', '--frames', default=1,
