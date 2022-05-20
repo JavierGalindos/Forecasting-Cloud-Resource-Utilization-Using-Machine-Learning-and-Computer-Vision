@@ -459,13 +459,16 @@ class ConvLSTMModel:
         defaultKwargs = {'marker': 'o',
                          'linestyle': '-',
                          'alpha': 0.3,
-                         'markersize': 2}
+                         'markersize': 2,
+                         'linewidth': 2.0,
+                         }
         kwargs_forecast = {'marker': 'o',
                            'linestyle': '-',
                            'alpha': 0.5,
                            'markersize': 2,
-                           'color': 'tab:red'}
-        fig = plt.figure(dpi=200, figsize=(20, 4))
+                           'color': 'tab:green',
+                           'linewidth': 2.0,}
+        fig = plt.figure(dpi=200, figsize=(20, 3))
         plt.grid()
         self.df['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
@@ -478,12 +481,12 @@ class ConvLSTMModel:
         plt.close(fig)
 
         # Figure zoom
-        fig = plt.figure(dpi=200, figsize=(20, 4))
+        fig = plt.figure(dpi=200, figsize=(15, 2))
         # plt.grid()
-        test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
+        test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='tab:grey', **defaultKwargs)
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
         plt.ylabel('CPU usage [MHz]')
-        plt.title(f'Actual vs Forecast (Zoom)')
+        # plt.title(f'Actual vs Forecast (Zoom)')
         # plt.grid()
         plt.legend()
         save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'forecast_zoom')

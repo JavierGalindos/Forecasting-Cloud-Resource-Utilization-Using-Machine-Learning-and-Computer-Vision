@@ -127,7 +127,7 @@ def load_datacenter(VMs: List[pd.DataFrame]) -> pd.DataFrame:
 
 
 def plot_timeSeries(data, MA=0, ema=0.05, legend=True, xlabel='Time', ylabel=None, title=None, xlim=None, ylim=None,
-                    xticks=None, figsize=(25, 5), dpi=120, savefig=None, show=True, **kwargs):
+                    xticks=None, figsize=(15, 2), dpi=120, savefig=None, show=True, **kwargs):
     """ Utility to plot Time Series with moving average filters """
 
     # Define default kwargs
