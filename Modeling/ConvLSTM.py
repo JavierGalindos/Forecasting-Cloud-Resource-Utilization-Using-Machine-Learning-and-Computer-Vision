@@ -603,6 +603,22 @@ class ConvLSTMModel:
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
 
+        # Save the prediction
+        try:
+            filename = os.path.join('./logs/ConvLSTM', self.model_name, self.name)
+            if not os.access(filename, os.F_OK):
+                os.makedirs(filename)
+            filename = os.path.join('./logs/ConvLSTM', self.model_name, self.name, 'pred.csv')
+            pred_df_trf.to_csv(filename)
+        except:
+            print("Unable to write to file")
+        # Test set
+        try:
+            filename = os.path.join('./logs/ConvLSTM', self.model_name, self.name, 'test.csv')
+            test_df_trf.to_csv(filename)
+        except:
+            print("Unable to write to file")
+
         if self.numeric is False:
             return pred, img_pred_bin, pred_df_trf
         else:

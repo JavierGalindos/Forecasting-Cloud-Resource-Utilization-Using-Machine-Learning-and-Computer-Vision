@@ -249,6 +249,22 @@ class Baseline:
         save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'gt_vs_pred_lines_full')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
+
+        # Save the prediction
+        try:
+            filename = os.path.join('logs/Baseline', self.model_name, self.name)
+            if not os.access(filename, os.F_OK):
+                os.makedirs(filename)
+            filename = os.path.join('logs/Baseline', self.model_name, self.name, 'pred.csv')
+            pred_df.to_csv(filename)
+        except:
+            print("Unable to write to file")
+        # Test set
+        try:
+            filename = os.path.join('logs/Baseline', self.model_name, self.name, 'test.csv')
+            self.test_df.to_csv(filename)
+        except:
+            print("Unable to write to file")
         return pred_df
 
     def baseline_evaluate(self, pred):

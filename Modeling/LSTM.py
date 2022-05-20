@@ -447,6 +447,22 @@ class LstmModel:
         save_path = os.path.join(FIGURES_PATH, self.name, 'gt_vs_pred_lines_full')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
+        # Save the prediction
+        try:
+            filename = os.path.join('logs/LSTM', self.name)
+            if not os.access(filename, os.F_OK):
+                os.makedirs(filename)
+            filename = os.path.join('logs/LSTM', self.name, 'pred.csv')
+            pred_df_trf.to_csv(filename)
+        except:
+            print("Unable to write to file")
+        # Test set
+        try:
+            filename = os.path.join('logs/LSTM', self.name, 'test.csv')
+            test_df_trf.to_csv(filename)
+        except:
+            print("Unable to write to file")
+
         return pred_df_trf
 
     def evaluation(self, pred, scaler):
