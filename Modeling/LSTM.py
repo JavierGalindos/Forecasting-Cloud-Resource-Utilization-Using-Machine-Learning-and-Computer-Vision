@@ -306,7 +306,7 @@ class LstmModel:
                            'linestyle': '-',
                            'alpha': 0.5,
                            'markersize': 2,
-                           'color': 'tab:grey',
+                           'color': 'tab:green',
                            'linewidth': 2.0,
                            }
         fig = plt.figure(dpi=200, figsize=(20, 4))
