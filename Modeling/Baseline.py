@@ -17,6 +17,7 @@ import tensorflow as tf
 import time
 
 FIGURES_PATH = '../Figures/Modeling/Baseline'
+plt.rcParams['font.size'] = '13'
 
 if not os.access(FIGURES_PATH, os.F_OK):
     os.makedirs(FIGURES_PATH)

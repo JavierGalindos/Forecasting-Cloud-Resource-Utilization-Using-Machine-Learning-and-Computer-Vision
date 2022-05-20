@@ -13,6 +13,7 @@ import math
 from DataExploration.BitbrainsUtils import *
 
 FIGURES_PATH = '../Figures/Modeling/LSTM'
+plt.rcParams['font.size'] = '13'
 
 if not os.access(FIGURES_PATH, os.F_OK):
     os.makedirs(FIGURES_PATH)
