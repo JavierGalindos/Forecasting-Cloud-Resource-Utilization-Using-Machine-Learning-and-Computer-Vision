@@ -101,12 +101,16 @@ class Baseline:
         defaultKwargs = {'marker': 'o',
                          'linestyle': '-',
                          'alpha': 0.3,
-                         'markersize': 2}
+                         'markersize': 2,
+                         'linewidth': 2.0,
+                         }
         kwargs_forecast = {'marker': 'o',
                            'linestyle': '-',
                            'alpha': 0.5,
                            'markersize': 2,
-                           'color': 'tab:red'}
+                           'color': 'tab:green',
+                           'linewidth': 2.0,
+                           }
         fig = plt.figure(dpi=200, figsize=(20, 4))
         plt.grid()
         self.df['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
@@ -122,9 +126,9 @@ class Baseline:
         plt.close(fig)
 
         # Figure zoom
-        fig = plt.figure(dpi=200, figsize=(20, 4))
+        fig = plt.figure(dpi=200, figsize=(15, 2))
         # plt.grid()
-        self.test_df['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
+        self.test_df['CPU usage [MHZ]'].plot(label='actual', color='tab:grey', **defaultKwargs)
         pred_df['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
         plt.ylabel('CPU usage [MHz]')
         # plt.title()
