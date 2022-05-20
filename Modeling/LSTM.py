@@ -329,7 +329,7 @@ class LstmModel:
         test_df_trf['CPU usage [MHZ]'].plot(label='actual', color='tab:grey', **defaultKwargs)
         pred_df_trf['CPU usage [MHZ]'].plot(label='forecast', **kwargs_forecast)
         plt.ylabel('CPU usage [MHz]')
-        plt.title(f'Val MAE:{val_mae[1]:.3f}')
+        # plt.title(f'Val MAE:{val_mae[1]:.3f}')
         # plt.grid()
         plt.legend()
         if not os.access(os.path.join(FIGURES_PATH, self.name), os.F_OK):
