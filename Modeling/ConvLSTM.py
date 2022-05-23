@@ -467,7 +467,8 @@ class ConvLSTMModel:
                            'alpha': 0.5,
                            'markersize': 2,
                            'color': 'tab:green',
-                           'linewidth': 2.0,}
+                           'linewidth': 2.0,
+                           }
         fig = plt.figure(dpi=200, figsize=(20, 3))
         plt.grid()
         self.df['CPU usage [MHZ]'].plot(label='actual', color='k', **defaultKwargs)
