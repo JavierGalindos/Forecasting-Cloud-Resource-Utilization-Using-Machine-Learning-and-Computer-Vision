@@ -55,32 +55,41 @@
 # LSTM Classification
 # Sinus
 
-python3 LSTM_CM.py  -n '917/CM_1081_clas' --VM 917 --label 16 --VM_test 1081 --classification True
-python3 LSTM_CM.py  -n '917/CM_340_clas' --VM 917 --label 16 --VM_test 340 --classification True
-python3 LSTM_CM.py  -n '917/CM_226_clas' --VM 917 --label 16 --VM_test 226 --classification True
-python3 LSTM_CM.py  -n '917/CM_251_clas' --VM 917 --label 16 --VM_test 251 --classification True
-python3 LSTM_CM.py  -n '917/CM_599_clas' --VM 917 --label 16 --VM_test 599 --classification True
-python3 LSTM_CM.py  -n '917/CM_118_clas' --VM 917 --label 16 --VM_test 118 --classification True
-python3 LSTM_CM.py  -n '917/CM_119_clas' --VM 917 --label 16 --VM_test 119 --classification True
-python3 LSTM_CM.py  -n '917/CM_120_clas' --VM 917 --label 16 --VM_test 120 --classification True
-# Up down
-python3 LSTM_CM.py  -n '226/CM_1081_clas' --VM 226 --label 16 --VM_test 1081 --classification True
-python3 LSTM_CM.py  -n '226/CM_340_clas' --VM 226 --label 16 --VM_test 340 --classification True
-python3 LSTM_CM.py  -n '226/CM_917_clas' --VM 226 --label 16 --VM_test 917 --classification True
-python3 LSTM_CM.py  -n '226/CM_251_clas' --VM 226 --label 16 --VM_test 251 --classification True
-python3 LSTM_CM.py  -n '226/CM_599_clas' --VM 226 --label 16 --VM_test 599 --classification True
-python3 LSTM_CM.py  -n '226/CM_118_clas' --VM 226 --label 16 --VM_test 118 --classification True
-python3 LSTM_CM.py  -n '226/CM_119_clas' --VM 226 --label 16 --VM_test 119 --classification True
-python3 LSTM_CM.py  -n '226/CM_120_clas' --VM 226 --label 16 --VM_test 120 --classification True
-# Weird
-python3 LSTM_CM.py  -n '118/CM_1081_clas' --VM 118 --label 16 --VM_test 1081 --classification True
-python3 LSTM_CM.py  -n '118/CM_340_clas' --VM 118 --label 16 --VM_test 340 --classification True
-python3 LSTM_CM.py  -n '118/CM_917_clas' --VM 118 --label 16 --VM_test 917 --classification True
-python3 LSTM_CM.py  -n '118/CM_251_clas' --VM 118 --label 16 --VM_test 251 --classification True
-python3 LSTM_CM.py  -n '118/CM_599_clas' --VM 118 --label 16 --VM_test 599 --classification True
-python3 LSTM_CM.py  -n '118/CM_226_clas' --VM 118 --label 16 --VM_test 226 --classification True
-python3 LSTM_CM.py  -n '118/CM_119_clas' --VM 118 --label 16 --VM_test 119 --classification True
-python3 LSTM_CM.py  -n '118/CM_120_clas' --VM 118 --label 16 --VM_test 120 --classification True
+#python3 LSTM_CM.py  -n '917/CM_1081_clas' --VM 917 --label 16 --VM_test 1081 --classification True
+#python3 LSTM_CM.py  -n '917/CM_340_clas' --VM 917 --label 16 --VM_test 340 --classification True
+#python3 LSTM_CM.py  -n '917/CM_226_clas' --VM 917 --label 16 --VM_test 226 --classification True
+#python3 LSTM_CM.py  -n '917/CM_251_clas' --VM 917 --label 16 --VM_test 251 --classification True
+#python3 LSTM_CM.py  -n '917/CM_599_clas' --VM 917 --label 16 --VM_test 599 --classification True
+#python3 LSTM_CM.py  -n '917/CM_118_clas' --VM 917 --label 16 --VM_test 118 --classification True
+#python3 LSTM_CM.py  -n '917/CM_119_clas' --VM 917 --label 16 --VM_test 119 --classification True
+#python3 LSTM_CM.py  -n '917/CM_120_clas' --VM 917 --label 16 --VM_test 120 --classification True
+## Up down
+#python3 LSTM_CM.py  -n '226/CM_1081_clas' --VM 226 --label 16 --VM_test 1081 --classification True
+#python3 LSTM_CM.py  -n '226/CM_340_clas' --VM 226 --label 16 --VM_test 340 --classification True
+#python3 LSTM_CM.py  -n '226/CM_917_clas' --VM 226 --label 16 --VM_test 917 --classification True
+#python3 LSTM_CM.py  -n '226/CM_251_clas' --VM 226 --label 16 --VM_test 251 --classification True
+#python3 LSTM_CM.py  -n '226/CM_599_clas' --VM 226 --label 16 --VM_test 599 --classification True
+#python3 LSTM_CM.py  -n '226/CM_118_clas' --VM 226 --label 16 --VM_test 118 --classification True
+#python3 LSTM_CM.py  -n '226/CM_119_clas' --VM 226 --label 16 --VM_test 119 --classification True
+#python3 LSTM_CM.py  -n '226/CM_120_clas' --VM 226 --label 16 --VM_test 120 --classification True
+## Weird
+#python3 LSTM_CM.py  -n '118/CM_1081_clas' --VM 118 --label 16 --VM_test 1081 --classification True
+#python3 LSTM_CM.py  -n '118/CM_340_clas' --VM 118 --label 16 --VM_test 340 --classification True
+#python3 LSTM_CM.py  -n '118/CM_917_clas' --VM 118 --label 16 --VM_test 917 --classification True
+#python3 LSTM_CM.py  -n '118/CM_251_clas' --VM 118 --label 16 --VM_test 251 --classification True
+#python3 LSTM_CM.py  -n '118/CM_599_clas' --VM 118 --label 16 --VM_test 599 --classification True
+#python3 LSTM_CM.py  -n '118/CM_226_clas' --VM 118 --label 16 --VM_test 226 --classification True
+#python3 LSTM_CM.py  -n '118/CM_119_clas' --VM 118 --label 16 --VM_test 119 --classification True
+#python3 LSTM_CM.py  -n '118/CM_120_clas' --VM 118 --label 16 --VM_test 120 --classification True
+
+python3 LSTM_CM.py  -n '917/CM_1081_2lay' --VM 917 --label 16 --VM_test 1081 --layers 2
+python3 LSTM_CM.py  -n '917/CM_340_2lay' --VM 917 --label 16 --VM_test 340 --layers 2
+python3 LSTM_CM.py  -n '917/CM_226_2lay' --VM 917 --label 16 --VM_test 226 --layers 2
+python3 LSTM_CM.py  -n '917/CM_251_2lay' --VM 917 --label 16 --VM_test 251 --layers 2
+python3 LSTM_CM.py  -n '917/CM_599_2lay' --VM 917 --label 16 --VM_test 599 --layers 2
+python3 LSTM_CM.py  -n '917/CM_118_2lay' --VM 917 --label 16 --VM_test 118 --layers 2
+python3 LSTM_CM.py  -n '917/CM_119_2lay' --VM 917 --label 16 --VM_test 119 --layers 2
+python3 LSTM_CM.py  -n '917/CM_120_2lay' --VM 917 --label 16 --VM_test 120 --layers 2
 
 
 

@@ -7,10 +7,10 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-e', '--epoch', default=100,
                     help='number of epoch')
 
-parser.add_argument('-n', '--name', default='599/LSTM',
+parser.add_argument('-n', '--name', default='917/LSTM',
                     help='name of the model')
 
-parser.add_argument('-s', '--figure_path', default="599",
+parser.add_argument('-s', '--figure_path', default="917",
                     help='Destination for figures to be saved at')
 
 parser.add_argument('-i', '--input_length', default=50,
@@ -25,7 +25,7 @@ parser.add_argument('-l', '--layers', default=1,
 parser.add_argument('--dropout', default=0,
                     help='dropout')
 
-parser.add_argument('--label', default=1,
+parser.add_argument('--label', default=16,
                     help='label_length')
 
 parser.add_argument('--classification', type=bool, default=False,

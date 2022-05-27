@@ -12,12 +12,12 @@ if __name__ == "__main__":
     train_df, val_df, test_df = split_data(df)
 
     # Normalizing
-    scaler = StandardScaler()
+    scaler = MinMaxScaler()
     train_df, val_df, test_df = data_transformation(scaler, train_df, val_df, test_df)
 
     # LSTM model
-    lstm_model = LstmModel(input_width=50, label_width=6, df=df, train_df=train_df, val_df=val_df, test_df=test_df,
-                           epoch=100, units=20, layers=1, dropout=0, name='549/pre_StandardScaler', classification=False)
+    lstm_model = LstmModel(input_width=50, label_width=16, df=df, train_df=train_df, val_df=val_df, test_df=test_df,
+                           epoch=100, units=20, layers=1, dropout=0, name='549/pre_StandardScaler', classification=True)
 
     # Training
     print('Training:')
