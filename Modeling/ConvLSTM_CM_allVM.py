@@ -99,7 +99,7 @@ if __name__ == "__main__":
     print('Training:')
     history = ConvLSTM_model.compile_and_fit()
     # Prediction for every VM
-    for VM in range(60, 1250):
+    for VM in range(59, 1250):
         VM_test = load_VM(f'{VM}.csv')
         df_test = VM_test[['CPU usage [MHZ]']]
         # Test
@@ -112,10 +112,13 @@ if __name__ == "__main__":
         setattr(ConvLSTM_model, 'name', f'917/CM_{VM_NUM}/{VM}')
 
         print('Prediction:')
-        if ConvLSTM_model.numeric is False:
-            pred, img_pred, pred_df_trf = ConvLSTM_model.prediction(scaler)
-        else:
-            pred, pred_df_trf = ConvLSTM_model.prediction(scaler)
-        # Evaluation
-        print('Evaluation:')
-        metrics = ConvLSTM_model.evaluation(pred_df_trf, scaler)
+        try:
+            if ConvLSTM_model.numeric is False:
+                pred, img_pred, pred_df_trf = ConvLSTM_model.prediction(scaler)
+            else:
+                pred, pred_df_trf = ConvLSTM_model.prediction(scaler)
+            # Evaluation
+            print('Evaluation:')
+            metrics = ConvLSTM_model.evaluation(pred_df_trf, scaler)
+        except:
+            print(f"VM{VM} failed")

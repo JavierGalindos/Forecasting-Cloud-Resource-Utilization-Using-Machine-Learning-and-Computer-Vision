@@ -100,7 +100,7 @@ if __name__ == "__main__":
     print('Training:')
     history = lstm_model.compile_and_fit(patience=80)
     # Prediction for every VM
-    for VM in range(60, 1250):
+    for VM in range(59, 1250):
         VM_test = load_VM(f'{VM}.csv')
         df_test = VM_test[['CPU usage [MHZ]']]
         # Test
@@ -112,8 +112,11 @@ if __name__ == "__main__":
         setattr(lstm_model, 'test_df', test_df)
         setattr(lstm_model, 'name', f'917/CM_{VM_NUM}/{VM}')
         # Prediction
-        print('Prediction:')
-        pred = lstm_model.prediction(scaler)
-        # Evaluation
-        print('Evaluation:')
-        metrics = lstm_model.evaluation(pred, scaler)
+        try:
+            print('Prediction:')
+            pred = lstm_model.prediction(scaler)
+            # Evaluation
+            print('Evaluation:')
+            metrics = lstm_model.evaluation(pred, scaler)
+        except:
+            print(f"VM{VM} failed")
