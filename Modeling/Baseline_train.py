@@ -39,6 +39,7 @@ if __name__ == "__main__":
     # # Split data
     # train_df, val_df, test_df = split_data(df, 0.9, 0)
 
+    # Pre-processing for cross-modeling
     print('Pre-processing')
     # Load data
     VM = load_VM(f'{VM_NUM}.csv')
@@ -55,18 +56,18 @@ if __name__ == "__main__":
     VM_test = load_VM(f'{VM_NUM_test}.csv')
     test_df = VM_test[['CPU usage [MHZ]']]
 
-    # Exponential smoothing
-    exp_model = Baseline(label_width=LABEL_LENGTH,
-                         df=df,
-                         train_df=train_df,
-                         val_df=val_df,
-                         test_df=test_df,
-                         model_name='exp',
-                         name=NAME)
-    # Prediction
-    pred_df = exp_model.baseline_prediction()
-    # Validation
-    metrics = exp_model.baseline_evaluate(pred_df)
+    # # Exponential smoothing
+    # exp_model = Baseline(label_width=LABEL_LENGTH,
+    #                      df=df,
+    #                      train_df=train_df,
+    #                      val_df=val_df,
+    #                      test_df=test_df,
+    #                      model_name='exp',
+    #                      name=NAME)
+    # # Prediction
+    # pred_df = exp_model.baseline_prediction()
+    # # Validation
+    # metrics = exp_model.baseline_evaluate(pred_df)
 
     # # ARIMA
     # arima_model = Baseline(label_width=LABEL_LENGTH,
@@ -80,5 +81,18 @@ if __name__ == "__main__":
     # pred_df = arima_model.baseline_prediction()
     # # Validation
     # metrics = arima_model.baseline_evaluate(pred_df)
+
+    # Naive forecast
+    naive_model = Baseline(label_width=LABEL_LENGTH,
+                         df=df,
+                         train_df=train_df,
+                         val_df=val_df,
+                         test_df=test_df,
+                         model_name='naive',
+                         name=NAME)
+    # Prediction
+    pred_df = naive_model.baseline_prediction()
+    # Validation
+    metrics = naive_model.baseline_evaluate(pred_df)
 
 

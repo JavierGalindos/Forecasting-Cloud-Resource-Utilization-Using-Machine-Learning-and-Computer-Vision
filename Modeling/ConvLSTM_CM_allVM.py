@@ -99,7 +99,7 @@ if __name__ == "__main__":
     print('Training:')
     history = ConvLSTM_model.compile_and_fit()
     # Prediction for every VM
-    for VM in range(1, 1250):
+    for VM in range(59, 1250):
         VM_test = load_VM(f'{VM}.csv')
         df_test = VM_test[['CPU usage [MHZ]']]
         # Test

@@ -88,10 +88,28 @@ class Baseline:
         pred_df = pd.DataFrame(data=np.array(pred), columns=['CPU usage [MHZ]'], index=self.test_df.index)
         return pred_df
 
+    def naive_fit_pred(self):
+        t_start = time.perf_counter()
+        self.model = SimpleExpSmoothing
+        pred = []
+        for i in tqdm(range(0, len(self.test_df), self.label_width)):
+            training = pd.concat([self.train_df, self.test_df.iloc[:i, :]])
+            # Add code here
+            naive_pred = training[-1, :] * np.ones(self.label_width)
+            pred.append(naive_pred)
+        self.train_time = time.perf_counter() - t_start
+        self.inference_time = self.train_time
+        pred = np.reshape(pred, (-1, 1))
+        pred = pred[:len(self.test_df), :]
+        pred_df = pd.DataFrame(data=np.array(pred), columns=['CPU usage [MHZ]'], index=self.test_df.index)
+        return pred_df
+
     def baseline_prediction(self):
         if self.model_name == "ARIMA":
             pred_df = self.arima_fit_predict()
         elif self.model_name == "exp":
+            pred_df = self.expSmooth_fit_pred()
+        elif self.model_name == "naive":
             pred_df = self.expSmooth_fit_pred()
         else:
             raise KeyError("{} model is unknown.".format(self.model_name))
