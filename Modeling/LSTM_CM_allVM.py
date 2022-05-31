@@ -100,7 +100,7 @@ if __name__ == "__main__":
     print('Training:')
     history = lstm_model.compile_and_fit(patience=80)
     # Prediction for every VM
-    for VM in range(59, 1250):
+    for VM in range(1, 1250):
         VM_test = load_VM(f'{VM}.csv')
         df_test = VM_test[['CPU usage [MHZ]']]
         # Test
@@ -111,6 +111,12 @@ if __name__ == "__main__":
         # Change class attributes
         setattr(lstm_model, 'test_df', test_df)
         setattr(lstm_model, 'name', f'917/CM_{VM_NUM}/{VM}')
+
+        # Change test_pred too
+        # Dataframe for predictions (take test + input_length from validation set)
+        test_pred_df = pd.concat([lstm_model.val_df.iloc[-lstm_model.input_width:, :], lstm_model.test_df])
+        setattr(lstm_model, 'test_pred_df', test_pred_df)
+
         # Prediction
         try:
             print('Prediction:')

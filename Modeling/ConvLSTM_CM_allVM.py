@@ -99,7 +99,7 @@ if __name__ == "__main__":
     print('Training:')
     history = ConvLSTM_model.compile_and_fit()
     # Prediction for every VM
-    for VM in range(59, 1250):
+    for VM in range(1, 1250):
         VM_test = load_VM(f'{VM}.csv')
         df_test = VM_test[['CPU usage [MHZ]']]
         # Test
@@ -110,6 +110,12 @@ if __name__ == "__main__":
         # Change class attributes
         setattr(ConvLSTM_model, 'test_df', test_df)
         setattr(ConvLSTM_model, 'name', f'917/CM_{VM_NUM}/{VM}')
+        # Change test_pred too
+        test_pred_df = pd.concat(
+            [ConvLSTM_model.val_df.iloc[
+             -(ConvLSTM_model.input_width + ConvLSTM_model.label_width * (ConvLSTM_model.n_frames - 1)):, :],
+             ConvLSTM_model.test_df])
+        setattr(ConvLSTM_model, 'test_pred_df', test_pred_df)
 
         print('Prediction:')
         try:
