@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import tensorflow as tf
+# tf.compat.v1.disable_v2_behavior()
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, LabelEncoder
 import datetime
 import time

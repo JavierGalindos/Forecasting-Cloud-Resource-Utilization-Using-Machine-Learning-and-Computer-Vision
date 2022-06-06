@@ -251,8 +251,8 @@ def get_model(ConvLSTMModel, name):
         setattr(ConvLSTMModel, 'frames', 1)
         inp = tf.keras.layers.Input(shape=ConvLSTMModel.train[0].shape[1:])
 
-        x = tf.keras.layers.Reshape(target_shape=ConvLSTMModel.train[0].shape[2:])(inp)
-        x = tf.keras.layers.Conv2D(128, (5, 5), activation='relu', padding='same', strides=2)(x)
+        # x = tf.keras.layers.Reshape(target_shape=ConvLSTMModel.train[0].shape[2:])(inp)  # TODO: Uncomment
+        x = tf.keras.layers.Conv2D(128, (5, 5), activation='relu', padding='same', strides=2)(inp) # TODO: Change to x
         x = tf.keras.layers.BatchNormalization()(x)
         # x = tf.keras.layers.MaxPooling2D((2, 2), padding='same')(x)
         x = tf.keras.layers.Conv2D(256, (5, 5), activation='relu', padding='same', strides=2)(x)

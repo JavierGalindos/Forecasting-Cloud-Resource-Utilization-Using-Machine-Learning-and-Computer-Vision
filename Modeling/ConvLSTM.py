@@ -180,6 +180,7 @@ class ConvLSTMModel:
                    :]
 
         # Generate the images (change between create_image_numpy and create_image_matplotlib)
+        t_start = time.perf_counter()
         # Overlapping c=(input_width-label_width)/input_width
         # Input images (shift label with between samples)
         input = []
@@ -226,6 +227,9 @@ class ConvLSTMModel:
             else:
                 labels.append(data[(i + j * self.label_width + self.input_width):(
                         i + self.input_width + j * self.label_width + self.label_width), 0])
+
+        creation_time = time.perf_counter() - t_start
+        print("Time to create images: {}".format(creation_time))
 
         # input = np.array(input).astype(int)  # Change to int
         input = np.array(input)
