@@ -218,7 +218,7 @@ class LstmModel:
         if self.classification is False:
             self.model.compile(loss=tf.losses.MeanSquaredError(),
                                optimizer=tf.optimizers.Adam(),
-                               metrics=tf.metrics.MeanAbsoluteError()
+                               metrics=[tf.metrics.MeanAbsoluteError()],
                                )
         else:
             self.model.compile(loss=tf.losses.CategoricalCrossentropy(),
