@@ -58,11 +58,7 @@ if __name__ == "__main__":
 
     for VM in range(1, 1250):
         VM_test = load_VM(f'{VM}.csv')
-        df_test = VM_test[['CPU usage [MHZ]']]
-        # Test
-        scaler = MinMaxScaler()
-        df_test.loc[:, df_test.columns] = scaler.fit_transform(df_test.loc[:, df_test.columns])
-        test_df = df_test.copy()
+        test_df = VM_test[['CPU usage [MHZ]']]
 
         # Change class attributes
         setattr(naive_model, 'test_df', test_df)
