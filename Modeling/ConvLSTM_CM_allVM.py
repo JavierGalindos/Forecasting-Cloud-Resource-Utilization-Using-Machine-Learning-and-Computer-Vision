@@ -1,4 +1,7 @@
 import argparse
+
+import pandas as pd
+
 from ConvLSTM import *
 
 parser = argparse.ArgumentParser(
@@ -73,6 +76,25 @@ if __name__ == "__main__":
     # Train & Validation
     scaler = MinMaxScaler()
     train_df, val_df, _ = data_transformation(scaler, train_df, val_df, _)
+
+    # More than one VM as training set
+    VM_NUM = 3  # TODO: remove after training
+    # Step
+    VM = load_VM(f'{226}.csv')
+    # Make it univariate
+    new_train = VM[['CPU usage [MHZ]']]
+    # Scale
+    scaler = MinMaxScaler()
+    new_train, _, _ = data_transformation(scaler, new_train, _, _)
+    train_df = pd.concat([train_df, new_train], ignore_index=True)
+    # Random
+    VM = load_VM(f'{226}.csv')
+    # Make it univariate
+    new_train = VM[['CPU usage [MHZ]']]
+    scaler = MinMaxScaler()
+    new_train, _, _ = data_transformation(scaler, new_train, _, _)
+    train_df = pd.concat([train_df, new_train], ignore_index=True)
+
     # Test
     scaler = MinMaxScaler()
     df_test.loc[:, df_test.columns] = scaler.fit_transform(df_test.loc[:, df_test.columns])
