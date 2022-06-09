@@ -347,7 +347,7 @@ class ConvLSTMModel:
         self.model_size = os.stat(model_filepath).st_size
 
         # Loss History figure
-        fig = plt.figure()
+        fig = plt.figure(dpi=200, figsize=(4, 4))
         plt.plot(history.history['loss'])
         plt.plot(history.history['val_loss'])
         plt.title('Model Loss')
@@ -357,7 +357,7 @@ class ConvLSTMModel:
         # plt.show()
         if not os.access(os.path.join(FIGURES_PATH, self.model_name, self.name), os.F_OK):
             os.makedirs(os.path.join(FIGURES_PATH, self.model_name, self.name))
-        save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'Loss')
+        save_path = os.path.join(FIGURES_PATH, self.model_name, self.name, 'Loss.pdf')
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
         # Save model structure

@@ -46,6 +46,8 @@ def load_VM(VM_name: str) -> pd.DataFrame:
     VM['Memory usage [%]'] = VM['Memory usage [KB]'] * 100 / VM['Memory capacity provisioned [KB]']
     # Avoid division by 0
     VM['Memory usage [%]'] = VM['Memory usage [%]'].fillna(0)
+    # CPU usage in GHz
+    VM['CPU usage [GHZ]'] = VM['CPU usage [MHZ]'] / 1000
     # Group by index and average (avoid duplicate timestamps)
     VM = VM.groupby(VM.index).mean()
     # Floor time index
@@ -132,7 +134,7 @@ def plot_timeSeries(data, MA=0, ema=0.05, legend=True, xlabel='Time', ylabel=Non
 
     # Define default kwargs
     defaultKwargs = {'marker': 'o',
-                     'linestyle': '-',
+                     'linestyle': '',
                      'alpha': 0.3,
                      'markersize': 2}
     kwargs = {**defaultKwargs, **kwargs}
